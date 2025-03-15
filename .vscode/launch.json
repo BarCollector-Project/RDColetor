@@ -26,6 +26,12 @@
             "type": "dart",
             "flutterMode": "release"
             
+        },
+        {
+            "name": "rdcoletor (Attach)",
+            "request": "attach",
+            "type": "dart",
+            
         }
         
     ]
