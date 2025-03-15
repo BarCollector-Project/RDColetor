@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rdcoletor/local/coletor/activity.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 void main() {
-  runApp(const Main());
+  //runApp(const Main());
+  runApp(const Activity());
 }
 
 class Main extends StatelessWidget {
