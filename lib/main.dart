@@ -15,20 +15,21 @@ class Main extends StatelessWidget {
     // TODO: implement build
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: QRScannerPage(),
+      home: ScannerPage(),
       theme: ThemeData(primarySwatch: Colors.blue),
     );
   }
 }
 
-class QRScannerPage extends StatefulWidget {
-  const QRScannerPage({super.key});
+class ScannerPage extends StatefulWidget {
+  const ScannerPage({super.key});
   @override
   QRScannerPageState createState() => QRScannerPageState();
 }
 
-class QRScannerPageState extends State<QRScannerPage> {
+class QRScannerPageState extends State<ScannerPage> {
   late final WebViewController _webviewController;
+  MobileScannerController _scannerController = MobileScannerController();
 
   bool _isInitialized = false;
   String? _qrCode = "Nenhum QR Code detectado";
@@ -61,6 +62,35 @@ class QRScannerPageState extends State<QRScannerPage> {
     });
   }
 
+  Future<void> injectKeyboardEvent(String text) async {
+    List<int> unitText = text.codeUnits;
+    for (int i = 0; i < unitText.length; i++) {
+      int keyCode = unitText[i];
+      String jsCodeKeydown = """
+        var eventKeyDown = new KeyboardEvent('keydown', {
+          key: String.fromCharCode($keyCode),
+          keyCode: $keyCode,
+          which: $keyCode,
+          bubbles: true,
+          cancelable: true
+        });
+        document.dispatchEvent(eventKeyDown);
+      """;
+      String jsCodeKeyup = """
+        var eventKeyUp = new KeyboardEvent('keyup', {
+          key: String.fromCharCode($keyCode),
+          keyCode: $keyCode,
+          which: $keyCode,
+          bubbles: true,
+          cancelable: true
+        });
+        document.dispatchEvent(eventKeyUp);
+      """;
+      await _webviewController.runJavaScript(jsCodeKeydown);
+      await _webviewController.runJavaScript(jsCodeKeyup);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final telaLargura = MediaQuery.of(context).size.width;
@@ -77,11 +107,17 @@ class QRScannerPageState extends State<QRScannerPage> {
             child:
                 (_exibirScanner)
                     ? MobileScanner(
-                      onDetect: (capture) {
+                      controller: _scannerController,
+                      onDetect: (capture) async {
                         final List<Barcode> barcodes = capture.barcodes;
                         for (final barcode in barcodes) {
-                          debugPrint('Barcode found! ${barcode.rawValue}');
-                          print(barcode);
+                          String? barcodeString = barcode.rawValue;
+                          if (barcodeString != null) {
+                            debugPrint('Barcode found! ${barcode.rawValue}');
+                            //showScanner(false);
+                            _scannerController.stop();
+                            //await injectKeyboardEvent(barcodeString);
+                          }
                         }
                       },
                     )
