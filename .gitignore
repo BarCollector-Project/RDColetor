@@ -43,3 +43,35 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android
+/android/local.properties
+/android/.gradle/
+/android/app/build/
+/android/build/
+
+# iOS
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/App.framework
+/ios/Flutter/engine.framework
+/ios/Flutter/flutter_assets/
+/ios/Flutter/Generated.xcconfig
+.generated
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+
+# Other Platforms
+/linux/build/
+/linux/ephemeral/
+/macos/build/
+/macos/Flutter/ephemeral/
+/macos/.symlinks/
+/windows/build/
+/windows/ephemeral/
+/web/build/
+
+# Keystore files
+*.jks
+*.keystore
