@@ -25,7 +25,7 @@ class _ActivityState extends State<ActivityWidget> {
   TextEditingController tecProduto = TextEditingController();
   TextEditingController tecQuantidade = TextEditingController();
 
-  List<String> _produtos = [];
+  final List<String> _produtos = [];
 
   void addItem(String barcode, String produto, String quantidade) {
     setState(() {

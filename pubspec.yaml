@@ -7,14 +7,18 @@ environment:
   sdk: ^3.7.0-323.2.beta
 
 dependencies:
+  csv: ^6.0.0
   flutter:
     sdk: flutter
-  flutter_inappwebview: ^6.1.5
   mobile_scanner: ^6.0.6
   path_provider: ^2.1.5
   sqflite: ^2.4.1
-  webview_flutter: ^4.10.0
 
+  path: any
+  sqflite_common_ffi: ^2.3.6
+  provider: ^6.1.5
+  shared_preferences: ^2.5.3
+  file_picker: ^10.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
