@@ -1,8 +1,7 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
-import 'package:rdcoletor/local/path_service.dart';
+
+// TODO: Criar um serviço para salvar e carregar as informações de conexão.
+// import 'package:rdcoletor/api/connection_service.dart';
 
 class InitialSetupScreen extends StatefulWidget {
   final VoidCallback onSetupComplete;
@@ -14,68 +13,64 @@ class InitialSetupScreen extends StatefulWidget {
 }
 
 class _InitialSetupScreenState extends State<InitialSetupScreen> {
-  final PathService _pathService = PathService();
-  final TextEditingController _pathController = TextEditingController();
+  // TODO: Substituir por uma implementação real de um serviço de conexão.
+  // final ConnectionService _connectionService = ConnectionService();
+  final TextEditingController _serverAddressController = TextEditingController();
+  final TextEditingController _portController = TextEditingController(text: '8080');
 
   bool _isLoading = false;
-  String _statusMessage = 'Por favor, selecione a pasta onde o arquivo "rdcoletor.db" está localizado.';
-
-  String? selectedDirectory;
+  String _statusMessage = 'Por favor, insira o endereço e a porta do servidor.';
 
   @override
   void dispose() {
-    _pathController.dispose();
+    _serverAddressController.dispose();
+    _portController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickerDatabaseDirectory() async {
-    selectedDirectory = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Selecione a pasta do banco de dados',
-    );
-
-    if (selectedDirectory == null) {
-      // User canceled the picker
-      setState(() {
-        _statusMessage = 'Seleção cancelada. Por favor, selecione a pasta onde o arquivo "rdcoletor.db" está localizado.';
-      });
-    } else {
-      _pathController.text = selectedDirectory!;
-      _readDatabaseDirectory();
-    }
-  }
-
-  Future<void> _readDatabaseDirectory() async {
+  Future<void> _testAndSaveConnection() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Lendo o diretório...';
+      _statusMessage = 'Testando a conexão com o servidor...';
     });
 
     try {
-      if (selectedDirectory != null) {
-        final dbPath = join(selectedDirectory!, 'rdcoletor.db');
-        if (await File(dbPath).exists()) {
-          await _pathService.saveDatabaseDirectory(selectedDirectory!);
-          setState(() {
-            _statusMessage = 'Configuração concluída! O aplicativo será iniciado.';
-          });
-          // Notifica o wrapper que a configuração foi concluída.
-          widget.onSetupComplete();
-        } else {
-          setState(() {
-            _statusMessage = 'O arquivo "rdcoletor.db" não foi encontrado nesta pasta. Por favor, tente novamente.';
-          });
-        }
+      final address = _serverAddressController.text;
+      final port = _portController.text;
+
+      if (address.isEmpty || port.isEmpty) {
+        setState(() {
+          _statusMessage = 'O endereço do servidor e a porta não podem estar vazios.';
+        });
+        return;
+      }
+
+      // LÓGICA DE TESTE DE CONEXÃO
+      // Aqui você usaria um serviço (ex: com o pacote http) para fazer uma
+      // chamada a um endpoint de "health check" no seu servidor.
+      // Ex: final isConnectionOk = await _connectionService.testConnection(address, int.parse(port));
+
+      // Para este exemplo, vamos simular uma conexão bem-sucedida após 2 segundos.
+      await Future.delayed(const Duration(seconds: 2));
+      const isConnectionOk = true; // Simulação
+
+      if (isConnectionOk) {
+        // await _connectionService.saveConnectionInfo(address, int.parse(port));
+        setState(() {
+          _statusMessage = 'Conexão bem-sucedida! O aplicativo será iniciado.';
+        });
+        widget.onSetupComplete();
+      } else {
+        setState(() {
+          _statusMessage = 'Não foi possível conectar ao servidor. Verifique os dados e tente novamente.';
+        });
       }
     } catch (e) {
       setState(() {
-        _statusMessage = 'Ocorreu um erro: $e';
+        _statusMessage = 'Ocorreu um erro ao tentar conectar: $e';
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -89,27 +84,38 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.folder_special_rounded, size: 100, color: Theme.of(context).primaryColor),
+              Icon(Icons.cloud_queue_rounded, size: 100, color: Theme.of(context).primaryColor),
               const SizedBox(height: 20),
               const Text('Configuração Inicial', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Text(_statusMessage, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: Colors.black54)),
               const SizedBox(height: 24),
               TextField(
+                controller: _serverAddressController,
                 decoration: InputDecoration(
-                  labelText: 'Caminho do Banco de Dados',
+                  labelText: 'Endereço do Servidor (IP ou domínio)',
                   border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(onPressed: _pickerDatabaseDirectory, icon: Icon(Icons.search)),
+                  hintText: 'ex: 192.168.0.10',
                 ),
-                controller: _pathController,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _portController,
+                decoration: InputDecoration(
+                  labelText: 'Porta',
+                  border: const OutlineInputBorder(),
+                  hintText: 'ex: 8080',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 24),
               if (_isLoading)
                 const CircularProgressIndicator()
               else
                 ElevatedButton.icon(
-                  onPressed: _readDatabaseDirectory,
-                  icon: const Icon(Icons.search),
-                  label: const Text('Selecionar Pasta'),
+                  onPressed: _testAndSaveConnection,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Testar e Salvar Conexão'),
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
                 ),
             ],

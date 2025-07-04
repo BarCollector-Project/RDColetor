@@ -13,7 +13,7 @@ class _ImportScreenState extends State<ImportScreen> {
   bool _isLoading = false;
   String _statusMessage = 'Pronto para sincronização manual.';
 
-  Future<void> _runManualImport() async {
+  Future<void> _runManualImport({bool usePicker = false}) async {
     if (_isLoading) return;
 
     setState(() {
@@ -21,7 +21,7 @@ class _ImportScreenState extends State<ImportScreen> {
       _statusMessage = 'Iniciando sincronização...';
     });
 
-    final result = await _importService.runImport();
+    final result = await _importService.runImport(picker: usePicker);
 
     if (mounted) {
       final message = result.success ? '${result.productsImported} produtos sincronizados com sucesso!' : 'Falha na sincronização: ${result.errorMessage}';
@@ -55,13 +55,26 @@ class _ImportScreenState extends State<ImportScreen> {
               if (_isLoading)
                 const CircularProgressIndicator()
               else
-                ElevatedButton.icon(
-                  onPressed: _runManualImport,
-                  icon: const Icon(Icons.sync),
-                  label: const Text('Sincronizar Agora'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  ),
+                Column(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _runManualImport,
+                      icon: const Icon(Icons.sync),
+                      label: const Text('Sincronizar Agora'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => _runManualImport(usePicker: true),
+                      icon: const Icon(Icons.file_open),
+                      label: const Text('Importar do CSV'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      ),
+                    ),
+                  ],
                 ),
               const SizedBox(height: 20),
               Text(

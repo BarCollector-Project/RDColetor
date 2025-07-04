@@ -60,28 +60,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<void> _changeDatabasePath() async {
-    // 1. Pick a new directory
-    final String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Selecione a nova pasta do banco de dados',
-    );
-
-    if (selectedDirectory == null || !mounted) return; // User canceled or widget is gone
-
-    // 2. Validate that rdcoletor.db exists in the new directory
-    final dbPath = path.join(selectedDirectory, 'rdcoletor.db');
-    if (!await File(dbPath).exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Arquivo "rdcoletor.db" não encontrado no diretório selecionado.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
-
-    // 3. Ask for admin credentials to authorize the change
+    //Solicita do usuário as credenciais do administrador para mudar o diretório do banco de dados aplicativo
     final adminController = TextEditingController();
     final passwordController = TextEditingController();
 
@@ -123,6 +102,28 @@ class _SettingsState extends State<Settings> {
 
       if (credentialsConfirmed != true) return;
     }
+
+    //Use o FilePicker para localizar o diretório do banco de dados
+    final String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Selecione a nova pasta do banco de dados',
+    );
+
+    if (selectedDirectory == null || !mounted) return; // User canceled or widget is gone
+
+    // Verifica se o diretório é válido
+    final dbPath = path.join(selectedDirectory, 'rdcoletor.db');
+    if (!await File(dbPath).exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Arquivo "rdcoletor.db" não encontrado no diretório selecionado.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     // 4. Perform the change
     setState(() {
       _isChangingPath = true;

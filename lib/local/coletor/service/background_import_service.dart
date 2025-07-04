@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart';
 import 'package:rdcoletor/local/coletor/db/controller/importer.dart';
 
 // Uma classe simples para encapsular o resultado da importação.
@@ -23,7 +25,7 @@ class BackgroundImportService {
   // **IMPORTANTE**: Este método é um placeholder.
   // Você deve implementar aqui a lógica para buscar o arquivo CSV do seu servidor
   // ou diretório compartilhado.
-  Future<File?> _fetchCsvFile() async {
+  Future<File?> _fetchCsvFile({bool picker = false}) async {
     // Exemplo de lógica (NÃO FUNCIONAL, APENAS ILUSTRATIVO):
     // 1. Baixar o arquivo de um servidor:
     //    final response = await http.get(Uri.parse('https://seu-servidor.com/produtos.csv'));
@@ -37,19 +39,20 @@ class BackgroundImportService {
     //    if (await sourceFile.exists()) {
     //        return sourceFile;
     //    }
-
-    final sourceFile = File("C:\\Users\\User\\Downloads\\teste.csv");
-    if (await sourceFile.exists()) {
-      return sourceFile;
+    if (picker) {
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(dialogTitle: "text/csv");
+      if (result != null && result.count > 0) {
+        return File(result.paths.first!);
+      }
     }
     debugPrint("AVISO: A função _fetchCsvFile() precisa ser implementada com a sua lógica de busca de arquivo.");
     return null; // Retorna nulo pois a lógica real precisa ser adicionada.
   }
 
   // Executa o processo de importação completo.
-  Future<ImportResult> runImport() async {
+  Future<ImportResult> runImport({bool picker = false}) async {
     try {
-      final File? csvFile = await _fetchCsvFile();
+      final File? csvFile = await _fetchCsvFile(picker: picker);
       if (csvFile == null) {
         return ImportResult(success: false, timestamp: DateTime.now(), errorMessage: "Arquivo CSV de origem não encontrado.");
       }
