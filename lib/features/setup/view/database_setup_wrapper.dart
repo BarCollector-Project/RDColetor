@@ -28,9 +28,9 @@ class _DatabaseSetupWrapperState extends State<DatabaseSetupWrapper> {
 
   void _onSetupComplete() {
     // Muda a chave do FutureBuilder para forçá-lo a re-executar o future.
-    setState(() {
-      _key = UniqueKey();
-    });
+    //setState(() {
+    //_key = UniqueKey();
+    //});
   }
 
   @override

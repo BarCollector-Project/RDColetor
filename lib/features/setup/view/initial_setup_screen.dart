@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rdcoletor/local/server/services/connection_service.dart';
 
 // TODO: Criar um serviço para salvar e carregar as informações de conexão.
 // import 'package:rdcoletor/api/connection_service.dart';
@@ -14,7 +15,7 @@ class InitialSetupScreen extends StatefulWidget {
 
 class _InitialSetupScreenState extends State<InitialSetupScreen> {
   // TODO: Substituir por uma implementação real de um serviço de conexão.
-  // final ConnectionService _connectionService = ConnectionService();
+  final ConnectionService _connectionService = ConnectionService();
   final TextEditingController _serverAddressController = TextEditingController();
   final TextEditingController _portController = TextEditingController(text: '8080');
 
@@ -45,17 +46,13 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
         return;
       }
 
-      // LÓGICA DE TESTE DE CONEXÃO
-      // Aqui você usaria um serviço (ex: com o pacote http) para fazer uma
-      // chamada a um endpoint de "health check" no seu servidor.
-      // Ex: final isConnectionOk = await _connectionService.testConnection(address, int.parse(port));
+      final isConnectionOk = await _connectionService.testConnection(address, int.parse(port));
 
       // Para este exemplo, vamos simular uma conexão bem-sucedida após 2 segundos.
       await Future.delayed(const Duration(seconds: 2));
-      const isConnectionOk = true; // Simulação
 
       if (isConnectionOk) {
-        // await _connectionService.saveConnectionInfo(address, int.parse(port));
+        await _connectionService.saveConnectionInfo(address, int.parse(port));
         setState(() {
           _statusMessage = 'Conexão bem-sucedida! O aplicativo será iniciado.';
         });
