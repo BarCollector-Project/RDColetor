@@ -20,9 +20,6 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   final _productRepository = ProductRepository();
-  final _userRepository = UserRepository();
-  final _pathService = PathService();
-  final _dbService = DatabaseService();
   bool _isChangingPath = false;
 
   void _showChangeCredentialDialog({required bool isChangingUsername}) {
@@ -57,106 +54,6 @@ class _SettingsState extends State<Settings> {
         );
       },
     );
-  }
-
-  Future<void> _changeDatabasePath() async {
-    //Solicita do usuário as credenciais do administrador para mudar o diretório do banco de dados aplicativo
-    final adminController = TextEditingController();
-    final passwordController = TextEditingController();
-
-    if (mounted) {
-      final bool? credentialsConfirmed = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Autenticação de Administrador'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Para alterar o local do banco de dados, por favor, insira as credenciais de um administrador.'),
-                  const SizedBox(height: 16),
-                  TextField(controller: adminController, decoration: const InputDecoration(labelText: 'Usuário Admin')),
-                  TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Senha Admin'), obscureText: true),
-                ],
-              ),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-                ElevatedButton(
-                  onPressed: () async {
-                    final user = await _userRepository.findUserByCredentials(adminController.text, passwordController.text);
-                    if (user != null && user.role == UserRole.admin) {
-                      Navigator.pop(context, true);
-                    } else {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Credenciais de administrador inválidas.'), backgroundColor: Colors.red));
-                      }
-                      Navigator.pop(context, false);
-                    }
-                  },
-                  child: const Text('Confirmar'),
-                ),
-              ],
-            ),
-      );
-
-      if (credentialsConfirmed != true) return;
-    }
-
-    //Use o FilePicker para localizar o diretório do banco de dados
-    final String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Selecione a nova pasta do banco de dados',
-    );
-
-    if (selectedDirectory == null || !mounted) return; // User canceled or widget is gone
-
-    // Verifica se o diretório é válido
-    final dbPath = path.join(selectedDirectory, 'rdcoletor.db');
-    if (!await File(dbPath).exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Arquivo "rdcoletor.db" não encontrado no diretório selecionado.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
-
-    // 4. Perform the change
-    setState(() {
-      _isChangingPath = true;
-    });
-
-    try {
-      await _dbService.closeDatabase();
-      await _pathService.saveDatabaseDirectory(selectedDirectory);
-
-      // 5. Show restart dialog
-      if (mounted) {
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Sucesso!'),
-                content: const Text('O local do banco de dados foi alterado. Por favor, reinicie o aplicativo para aplicar as mudanças.'),
-                actions: [ElevatedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK'))],
-              ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao alterar o local: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isChangingPath = false);
-      }
-    }
   }
 
   void _showClearDatabaseConfirmation() {
@@ -217,13 +114,6 @@ class _SettingsState extends State<Settings> {
             onTap: () {
               Navigator.pushNamed(context, AppRoute.products);
             },
-          ),
-          const Divider(),
-          ListTile(
-            leading: _isChangingPath ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.storage_rounded),
-            title: const Text('Alterar Local do Banco de Dados'),
-            subtitle: const Text('Requer credenciais de administrador'),
-            onTap: _isChangingPath ? null : _changeDatabasePath,
           ),
           const Divider(),
           ListTile(

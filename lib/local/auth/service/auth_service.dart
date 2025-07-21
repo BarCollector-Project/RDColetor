@@ -7,7 +7,10 @@ import 'package:rdcoletor/local/auth/repository/user_repository.dart';
 /// Utiliza `ChangeNotifier` para permitir que widgets na UI reajam
 /// a mudanças no estado de autenticação (login/logout).
 class AuthService with ChangeNotifier {
-  final UserRepository _userRepository = UserRepository();
+  final UserRepository _userRepository;
+
+  // O repositório agora é injetado, não mais criado aqui dentro.
+  AuthService(this._userRepository);
 
   User? _currentUser;
   User? get currentUser => _currentUser;

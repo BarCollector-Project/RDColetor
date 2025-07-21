@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rdcoletor/local/app_database.dart';
 import 'package:rdcoletor/local/auth/model/user.dart';
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
 
@@ -10,7 +11,7 @@ class UserManagementScreen extends StatefulWidget {
 }
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
-  final UserRepository _userRepository = UserRepository();
+  final UserRepository _userRepository = UserRepository(DatabaseProvider.getDatabase());
   late Future<List<User>> _usersFuture;
 
   @override

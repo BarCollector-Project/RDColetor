@@ -9,5 +9,13 @@ formatter:
   trailing_commas: preserve
   page_width: 180
 
+analyzer:
+  exclude:
+    - build/**
+    - .dart_tool/**
+    - node_modules/**      # Se estiver usando Flutter Web com pacotes JS
+    - ios/**
+    - android/**
+    - web/**
 
 

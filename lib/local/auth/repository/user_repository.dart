@@ -1,13 +1,16 @@
 import 'package:rdcoletor/local/auth/model/user.dart';
-import 'package:rdcoletor/local/database_service.dart';
+import 'package:rdcoletor/local/app_database.dart';
 import 'package:sqflite/sqflite.dart';
 
 class UserRepository {
-  final _dbService = DatabaseService();
+  // Agora o repositório depende da abstração, não da implementação concreta.
+  final AppDatabase _appDatabase;
+
+  // A dependência é injetada pelo construtor.
+  UserRepository(this._appDatabase);
 
   Future<User?> findUserByCredentials(String username, String password) async {
-    final db = await _dbService.database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, dynamic>> maps = await _appDatabase.query(
       'users',
       where: 'username = ? AND password = ?',
       whereArgs: [username, password],
@@ -21,21 +24,18 @@ class UserRepository {
   }
 
   Future<List<User>> getAllUsers() async {
-    final db = await _dbService.database;
-    final List<Map<String, dynamic>> maps = await db.query('users', orderBy: 'username ASC');
+    final List<Map<String, dynamic>> maps = await _appDatabase.query('users', orderBy: 'username ASC');
     return maps.map((map) => User.fromMap(map)).toList();
   }
 
   Future<int> insertUser(User user) async {
-    final db = await _dbService.database;
     // Retorna o ID do novo usuário inserido.
-    return await db.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.fail);
+    return await _appDatabase.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.fail);
   }
 
   Future<int> updateUser(User user) async {
-    final db = await _dbService.database;
     // Retorna o número de linhas afetadas (deve ser 1).
-    return await db.update(
+    return await _appDatabase.update(
       'users',
       user.toMap(),
       where: 'id = ?',
@@ -44,7 +44,6 @@ class UserRepository {
   }
 
   Future<int> deleteUser(int id) async {
-    final db = await _dbService.database;
-    return await db.delete('users', where: 'id = ?', whereArgs: [id]);
+    return await _appDatabase.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 }

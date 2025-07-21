@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -54,22 +55,22 @@ class ConnectionService {
   /// Testa a conexão com um endereço de servidor e porta.
   /// Também verifica se o servidor é um servidor de aplicação válido.
   Future<bool> testConnection(String address, int port, [bool save = false]) async {
+    debugPrint("Testando conexão com o servidor no endereço $address:$port");
     // Validação básica de entrada
     if (address.trim().isEmpty || port <= 0 || port > 65535) {
       return false;
     }
 
-    // É uma boa prática ter um endpoint de "health check" no seu servidor.
-    // Isso garante que você está se conectando à aplicação correta.
-    // Vamos supor que seu servidor tenha um endpoint `/api/health`.
+    debugPrint("Montando a URL");
     final testUrl = Uri.parse('http://$address:$port/api/health');
 
     try {
-      final response = await _client.get(testUrl).timeout(const Duration(seconds: 5));
+      final response = await _client.get(testUrl).timeout(const Duration(seconds: 10));
       // Verificamos se o servidor está acessível (código 200).
       // O ideal é também checar o corpo da resposta para ter certeza
       // de que é o servidor correto, ex: if (response.body == 'API_OK')
-      if (response.statusCode == 200) {
+      debugPrint("Resposta do servidor: ${response.statusCode}");
+      if (response.statusCode == HttpStatus.ok) {
         if (save) {
           await saveConnectionInfo(address, port);
         }
@@ -78,6 +79,7 @@ class ConnectionService {
     } catch (e) {
       // Captura erros de Timeout, SocketException (rede), etc.
       //return false;
+      debugPrint("Erro ao testar conexão: $e");
     }
     return false;
   }

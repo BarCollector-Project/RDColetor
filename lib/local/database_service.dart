@@ -1,50 +1,67 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:rdcoletor/local/path_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:rdcoletor/local/coletor/model/product.dart';
 
-/// Serviço que gerencia a conexão com o banco de dados usando o padrão Singleton.
-///
-/// O Singleton garante que haverá apenas uma instância desta classe (e, portanto,
-/// uma única conexão com o banco de dados) em todo o aplicativo.
+import 'app_database.dart';
+
 class DatabaseService {
-  static final DatabaseService _instance = DatabaseService._internal();
-  factory DatabaseService() => _instance;
-  static Database? _database;
-  final PathService _pathService = PathService();
+  late final AppDatabase _db;
 
-  DatabaseService._internal();
+  DatabaseService();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
+  Future<void> init() async {
+    _db = DatabaseProvider.getDatabase();
 
-  Future<Database> _initDatabase() async {
-    final path = await _pathService.getDatabaseFullPath();
-
-    // Se o arquivo não existir no caminho especificado, lança uma exceção.
-    if (path.isEmpty || !await File(path).exists()) {
-      throw Exception('Arquivo de banco de dados não encontrado em: $path. Por favor, configure o caminho correto.');
+    if (kIsWeb) {
+      await _db.init();
+      return;
     }
 
-    debugPrint("Database path: $path");
-    // Removido o `onCreate`. O aplicativo agora espera que o banco de dados
-    // e suas tabelas já existam.
-    return await openDatabase(
-      path,
-      version: 1,
-    );
+    await _db.init();
   }
 
-  /// Fecha a conexão atual com o banco de dados.
-  /// Necessário ao alterar o caminho do banco de dados para liberar o arquivo.
-  Future<void> closeDatabase() async {
-    if (_database != null && _database!.isOpen) {
-      await _database!.close();
-      _database = null;
+  Future<void> dispose() async {
+    await _db.close();
+  }
+
+  Future<List<Product>> getProdutosLocal() async {
+    final maps = await _db.query('produtos');
+    return maps.map((e) => Product.fromMap(e)).toList();
+  }
+
+  Future<void> salvarProdutosLocal(List<Product> produtos) async {
+    for (final produto in produtos) {
+      await _db.insert('produtos', produto.toMap());
     }
+  }
+
+  Future<List<Product>> syncProdutosFromServer() async {
+    final uri = Uri.parse('http://192.168.1.98:8082/api/produtos');
+    final res = await http.get(uri);
+
+    if (res.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(res.body);
+      final produtos = jsonList.map((e) => Product.fromMap(e)).toList();
+
+      // Atualiza local
+      await _db.delete('produtos'); // Limpa antigos
+      await salvarProdutosLocal(produtos);
+
+      return produtos;
+    } else {
+      throw Exception('Erro ao buscar dados do servidor');
+    }
+  }
+
+  Future<List<Product>> getProdutos({bool forceRemote = false}) async {
+    if (forceRemote) {
+      return await syncProdutosFromServer();
+    }
+
+    final local = await getProdutosLocal();
+    if (local.isNotEmpty) return local;
+
+    return await syncProdutosFromServer();
   }
 }

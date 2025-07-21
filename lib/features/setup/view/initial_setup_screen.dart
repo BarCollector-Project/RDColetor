@@ -39,7 +39,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
       final address = _serverAddressController.text;
       final port = _portController.text;
 
-      if (address.isEmpty || port.isEmpty) {
+      if (address.trim().isEmpty || port.trim().isEmpty) {
         setState(() {
           _statusMessage = 'O endereço do servidor e a porta não podem estar vazios.';
         });
@@ -48,14 +48,12 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
       final isConnectionOk = await _connectionService.testConnection(address, int.parse(port));
 
-      // Para este exemplo, vamos simular uma conexão bem-sucedida após 2 segundos.
-      await Future.delayed(const Duration(seconds: 2));
-
       if (isConnectionOk) {
         await _connectionService.saveConnectionInfo(address, int.parse(port));
         setState(() {
           _statusMessage = 'Conexão bem-sucedida! O aplicativo será iniciado.';
         });
+        await Future.delayed(const Duration(seconds: 2));
         widget.onSetupComplete();
       } else {
         setState(() {
@@ -88,7 +86,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               Text(_statusMessage, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: Colors.black54)),
               const SizedBox(height: 24),
               TextField(
-                controller: _serverAddressController,
+                controller: _serverAddressController..text = "192.168.1.98",
                 decoration: InputDecoration(
                   labelText: 'Endereço do Servidor (IP ou domínio)',
                   border: const OutlineInputBorder(),
@@ -97,7 +95,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               ),
               const SizedBox(height: 16),
               TextField(
-                controller: _portController,
+                controller: _portController..text = "8082",
                 decoration: InputDecoration(
                   labelText: 'Porta',
                   border: const OutlineInputBorder(),

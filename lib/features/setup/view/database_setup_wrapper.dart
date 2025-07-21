@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rdcoletor/features/auth/view/auth_wrapper.dart';
 import 'package:rdcoletor/features/setup/view/initial_setup_screen.dart';
-import 'package:rdcoletor/local/database_service.dart';
+import 'package:rdcoletor/local/app_database.dart';
 
 class DatabaseSetupWrapper extends StatefulWidget {
   const DatabaseSetupWrapper({super.key});
@@ -14,12 +14,13 @@ class _DatabaseSetupWrapperState extends State<DatabaseSetupWrapper> {
   // Usando uma chave para forçar a reconstrução quando a configuração for concluída.
   Key _key = UniqueKey();
 
-  Future<bool> _checkDatabaseConnection() async {
+  // Obtém a implementação correta do banco de dados (nativa ou web) através da fábrica.
+  final AppDatabase _appDatabase = DatabaseProvider.getDatabase();
+
+  Future<bool> _checkDatabaseSetup() async {
     try {
-      // Tenta obter uma conexão. Se o arquivo não existir ou o caminho não estiver
-      // configurado, o DatabaseService lançará uma exceção.
-      await DatabaseService().database;
-      return true;
+      final initialized = await _appDatabase.init();
+      return initialized;
     } catch (e) {
       debugPrint("Database connection check failed: $e");
       return false;
@@ -28,16 +29,16 @@ class _DatabaseSetupWrapperState extends State<DatabaseSetupWrapper> {
 
   void _onSetupComplete() {
     // Muda a chave do FutureBuilder para forçá-lo a re-executar o future.
-    //setState(() {
-    //_key = UniqueKey();
-    //});
+    setState(() {
+      _key = UniqueKey();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
       key: _key,
-      future: _checkDatabaseConnection(),
+      future: _checkDatabaseSetup(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
