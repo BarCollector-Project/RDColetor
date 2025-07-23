@@ -44,8 +44,8 @@ class _ProductsState extends State<Products> {
     setState(() {
       _filteredProducts =
           _allProducts.where((product) {
-            final nameMatches = product.nome.toLowerCase().contains(query);
-            final codeMatches = product.codigo.toLowerCase().contains(query);
+            final nameMatches = product.name.toLowerCase().contains(query);
+            final codeMatches = product.barcode.toLowerCase().contains(query);
             return nameMatches || codeMatches;
           }).toList();
     });
@@ -91,9 +91,9 @@ class _ProductsState extends State<Products> {
                   itemBuilder: (context, index) {
                     final product = _filteredProducts[index];
                     return ListTile(
-                      title: Text(product.nome),
-                      subtitle: Text('Código: ${product.codigo}'),
-                      trailing: Text('R\$ ${product.preco.toStringAsFixed(2)}'),
+                      title: Text(product.name),
+                      subtitle: Text('Código: ${product.barcode}'),
+                      trailing: Text('R\$ ${product.price.toStringAsFixed(2)}'),
                     );
                   },
                 );

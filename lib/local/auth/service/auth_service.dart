@@ -21,6 +21,7 @@ class AuthService with ChangeNotifier {
   Future<bool> login(String username, String password) async {
     // NOTA: Em um app real, a senha `password` seria transformada em hash
     // antes de ser comparada no banco de dados.
+    debugPrint("Checando usuário $username com senha $password");
     final user = await _userRepository.findUserByCredentials(username, password);
 
     if (user != null) {
@@ -45,6 +46,7 @@ class AuthService with ChangeNotifier {
       password: newPassword ?? _currentUser!.password,
     );
 
+    // O método updateUser no repositório não precisa mais do token.
     await _userRepository.updateUser(updatedUser);
     _currentUser = updatedUser;
     notifyListeners();

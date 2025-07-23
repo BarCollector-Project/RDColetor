@@ -75,8 +75,8 @@ class _ColetorScreenState extends State<Coletor> {
       _collectedItems.insert(
         0, // Adiciona o item no topo da lista para visualização imediata
         {
-          'name': _foundProduct!.nome,
-          'code': _foundProduct!.codigo,
+          'name': _foundProduct!.name,
+          'code': _foundProduct!.barcode,
           'quantity': quantity,
         },
       );
@@ -111,7 +111,7 @@ class _ColetorScreenState extends State<Coletor> {
               height: 80,
               child: Center(
                 child: Text(
-                  _foundProduct?.nome ?? 'Digite ou escaneie um código',
+                  _foundProduct?.name ?? 'Digite ou escaneie um código',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

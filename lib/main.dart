@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/app_route.dart';
 import 'package:rdcoletor/features/setup/view/database_setup_wrapper.dart';
-import 'package:rdcoletor/local/app_database.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
+import 'package:rdcoletor/local/database_service.dart';
+import 'package:rdcoletor/local/server/services/connection_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 Future<void> main() async {
@@ -19,27 +20,45 @@ Future<void> main() async {
     databaseFactory = databaseFactoryFfi;
   }
 
+  await ConnectionService().initialize();
+
+  // Cria e inicializa o DatabaseService antes de o app rodar.
+  // Isso garante que o banco de dados estará pronto para uso.
+  final databaseService = DatabaseService();
+  await databaseService.init();
+
   runApp(
     // MultiProvider permite registrar vários providers de uma vez.
     MultiProvider(
       providers: [
-        // 1. Provider para a instância do banco de dados (AppDatabase).
-        //    Ele é criado uma vez e disponibilizado para os outros providers.
-        Provider<AppDatabase>(
-          create: (_) => DatabaseProvider.getDatabase(),
+        // 1. Provider para o ConnectionService.
+        //    É um ChangeNotifier, então a UI pode reagir às suas mudanças.
+        ChangeNotifierProvider<ConnectionService>(
+          create: (_) => ConnectionService(),
         ),
-        // 2. Provider para o UserRepository.
+        // 2. Fornece a instância JÁ INICIALIZADA do DatabaseService.
+        //    Usamos Provider.value para instâncias pré-criadas.
+        Provider<DatabaseService>.value(
+          value: databaseService,
+        ),
+        // 3. Provider para o UserRepository.
         //    Ele depende do AppDatabase, que é lido do contexto (`context.read<AppDatabase>()`).
         Provider<UserRepository>(
-          create: (context) => UserRepository(context.read<AppDatabase>()),
+          create: (context) => UserRepository(context.read<DatabaseService>()),
         ),
-        // 3. Provider para o AuthService.
-        //    Ele depende do UserRepository.
+        // 4. Provider para o AuthService, que agora depende de ambos os serviços.
         ChangeNotifierProvider<AuthService>(
-          create: (context) => AuthService(context.read<UserRepository>()),
+          create: (context) {
+            // A injeção de dependência correta é crucial.
+            // O AuthService precisa tanto do DatabaseService (para login via API)
+            // quanto do UserRepository (para gerenciar usuários locais).
+            return AuthService(
+              context.read<UserRepository>(),
+            );
+          },
         ),
       ],
-      child: const RDColetor(),
+      builder: (context, child) => const RDColetor(),
     ),
   );
 }

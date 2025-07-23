@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/server/services/connection_service.dart';
 
-// TODO: Criar um serviço para salvar e carregar as informações de conexão.
-// import 'package:rdcoletor/api/connection_service.dart';
-
 class InitialSetupScreen extends StatefulWidget {
-  final VoidCallback onSetupComplete;
-
-  const InitialSetupScreen({super.key, required this.onSetupComplete});
+  /// Tela para o usuário configurar a conexão inicial com o servidor.
+  /// Ela interage com o [ConnectionService] para testar e salvar as configurações.
+  /// A navegação para a próxima tela é gerenciada reativamente pelo [DatabaseSetupWrapper].
+  const InitialSetupScreen({super.key});
 
   @override
   State<InitialSetupScreen> createState() => _InitialSetupScreenState();
 }
 
 class _InitialSetupScreenState extends State<InitialSetupScreen> {
-  // TODO: Substituir por uma implementação real de um serviço de conexão.
-  final ConnectionService _connectionService = ConnectionService();
-  final TextEditingController _serverAddressController = TextEditingController();
+  final _serverAddressController = TextEditingController();
   final TextEditingController _portController = TextEditingController(text: '8080');
 
   bool _isLoading = false;
@@ -30,39 +27,33 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
   }
 
   Future<void> _testAndSaveConnection() async {
+    // Usa o ConnectionService provido pelo Provider.
+    final connectionService = context.read<ConnectionService>();
+
     setState(() {
       _isLoading = true;
       _statusMessage = 'Testando a conexão com o servidor...';
     });
 
     try {
-      final address = _serverAddressController.text;
-      final port = _portController.text;
+      final address = _serverAddressController.text.trim();
+      final port = int.tryParse(_portController.text.trim());
 
-      if (address.trim().isEmpty || port.trim().isEmpty) {
-        setState(() {
-          _statusMessage = 'O endereço do servidor e a porta não podem estar vazios.';
-        });
-        return;
+      if (address.isEmpty || port == null) {
+        throw ConnectionException('O endereço e a porta devem ser preenchidos.');
       }
 
-      final isConnectionOk = await _connectionService.testConnection(address, int.parse(port));
-
-      if (isConnectionOk) {
-        await _connectionService.saveConnectionInfo(address, int.parse(port));
-        setState(() {
-          _statusMessage = 'Conexão bem-sucedida! O aplicativo será iniciado.';
-        });
-        await Future.delayed(const Duration(seconds: 2));
-        widget.onSetupComplete();
-      } else {
-        setState(() {
-          _statusMessage = 'Não foi possível conectar ao servidor. Verifique os dados e tente novamente.';
-        });
-      }
+      // A chamada abaixo irá salvar a conexão e notificar os listeners.
+      // O DatabaseSetupWrapper irá reagir e trocar de tela automaticamente.
+      // Não precisamos fazer mais nada aqui em caso de sucesso.
+      await connectionService.testAndSaveConnection(address, port);
+    } on ConnectionException catch (e) {
+      setState(() {
+        _statusMessage = e.message;
+      });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Ocorreu um erro ao tentar conectar: $e';
+        _statusMessage = 'Ocorreu um erro inesperado: $e';
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);

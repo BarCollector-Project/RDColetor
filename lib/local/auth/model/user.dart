@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 enum UserRole {
   admin,
   common;
@@ -9,10 +11,11 @@ enum UserRole {
 }
 
 class User {
-  final int? id;
+  final String? id;
   final String username;
   final String password; // Em um app real, isso deve ser um hash!
   final UserRole role;
+  String? token;
 
   User({
     this.id,
@@ -23,10 +26,20 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      id: map['id'] as int?,
+      id: map['id'] as String?,
       username: map['username'] as String,
       password: map['password'] as String,
       role: UserRole.fromString(map['role'] as String),
+    );
+  }
+
+  factory User.fromJson(String json) {
+    final Map<String, dynamic> jsonMap = jsonDecode(json) as Map<String, dynamic>;
+    return User(
+      id: jsonMap['id'] as String?,
+      username: jsonMap['username'] as String,
+      password: jsonMap['password'] as String,
+      role: UserRole.fromString(jsonMap['role'] as String),
     );
   }
 
@@ -41,10 +54,11 @@ class User {
 
   /// Cria uma cópia do objeto User, permitindo a alteração de alguns campos.
   User copyWith({
-    int? id,
+    String? id,
     String? username,
     String? password,
     UserRole? role,
+    String? token,
   }) {
     return User(
       id: id ?? this.id,

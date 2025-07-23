@@ -1,54 +1,42 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ConnectionState;
+import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/auth/view/auth_wrapper.dart';
 import 'package:rdcoletor/features/setup/view/initial_setup_screen.dart';
-import 'package:rdcoletor/local/app_database.dart';
+import 'package:rdcoletor/local/server/services/connection_service.dart';
 
-class DatabaseSetupWrapper extends StatefulWidget {
+/// Este widget decide qual tela mostrar com base no estado da conexão com o servidor.
+///
+/// Ele escuta o [ConnectionService] e reage a mudanças:
+/// - Se a conexão não foi inicializada, mostra um loading.
+/// - Se a conexão não está configurada, mostra a [InitialSetupScreen].
+/// - Se a conexão está configurada, mostra o [AuthWrapper] para o login.
+class DatabaseSetupWrapper extends StatelessWidget {
   const DatabaseSetupWrapper({super.key});
 
   @override
-  State<DatabaseSetupWrapper> createState() => _DatabaseSetupWrapperState();
-}
-
-class _DatabaseSetupWrapperState extends State<DatabaseSetupWrapper> {
-  // Usando uma chave para forçar a reconstrução quando a configuração for concluída.
-  Key _key = UniqueKey();
-
-  // Obtém a implementação correta do banco de dados (nativa ou web) através da fábrica.
-  final AppDatabase _appDatabase = DatabaseProvider.getDatabase();
-
-  Future<bool> _checkDatabaseSetup() async {
-    try {
-      final initialized = await _appDatabase.init();
-      return initialized;
-    } catch (e) {
-      debugPrint("Database connection check failed: $e");
-      return false;
-    }
-  }
-
-  void _onSetupComplete() {
-    // Muda a chave do FutureBuilder para forçá-lo a re-executar o future.
-    setState(() {
-      _key = UniqueKey();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      key: _key,
-      future: _checkDatabaseSetup(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
+    // Usamos um Consumer para escutar as mudanças no ConnectionService.
+    // Ele reconstrói a UI automaticamente quando `notifyListeners()` é chamado.
+    return Consumer<ConnectionService>(
+      builder: (context, connectionService, child) {
+        switch (connectionService.state) {
+          case ConnectionState.uninitialized:
+            // Mostra um indicador de progresso enquanto o serviço carrega
+            // as configurações salvas do disco.
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
 
-        if (snapshot.hasData && snapshot.data == true) {
-          return const AuthWrapper();
-        }
+          case ConnectionState.configured:
+            // Se a conexão já está configurada, o usuário pode prosseguir
+            // para a tela de autenticação.
+            return const AuthWrapper();
 
-        return InitialSetupScreen(onSetupComplete: _onSetupComplete);
+          case ConnectionState.notConfigured:
+            // Se a conexão não foi configurada, direciona o usuário para a
+            // tela de configuração inicial.
+            return const InitialSetupScreen();
+        }
       },
     );
   }

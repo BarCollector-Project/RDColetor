@@ -17,17 +17,30 @@ class NativeAppDatabase extends AppDatabase {
       version: 1,
       onCreate: _onCreate,
     );
-
     return _db != null;
   }
 
   void _onCreate(Database db, int version) async {
     // Exemplo: crie as tabelas iniciais se necessário
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS produtos (
+      -- Corrigido para espelhar o modelo Product e o schema do servidor
+      CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
-        nome TEXT,
-        preco REAL
+        name TEXT NOT NULL,
+        barcode TEXT NOT NULL UNIQUE,
+        price REAL NOT NULL,
+        created_at TEXT,
+        updated_at TEXT
+      );
+    ''');
+
+    //Cria a tabela 'users'
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL
       );
     ''');
   }
@@ -71,5 +84,11 @@ class NativeAppDatabase extends AppDatabase {
       where: where,
       whereArgs: whereArgs,
     );
+  }
+
+  @override
+  Future<AppBatch> batch() {
+    // TODO: implement batch
+    throw UnimplementedError();
   }
 }

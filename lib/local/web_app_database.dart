@@ -87,4 +87,10 @@ class WebAppDatabase extends AppDatabase {
     await _prefs.remove('_index:$table');
     return count;
   }
+
+  @override
+  Future<AppBatch> batch() {
+    // TODO: implement batch
+    throw UnimplementedError();
+  }
 }

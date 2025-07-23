@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rdcoletor/local/app_database.dart';
+import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/auth/model/user.dart';
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
 
@@ -11,12 +11,13 @@ class UserManagementScreen extends StatefulWidget {
 }
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
-  final UserRepository _userRepository = UserRepository(DatabaseProvider.getDatabase());
+  late UserRepository _userRepository;
   late Future<List<User>> _usersFuture;
 
   @override
   void initState() {
     super.initState();
+
     _loadUsers();
   }
 
@@ -26,7 +27,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     });
   }
 
-  void _showUserDialog({User? user}) {
+  void _showUserDialog(BuildContext context, {User? user}) {
     final isEditing = user != null;
     final usernameController = TextEditingController(text: user?.username);
     final passwordController = TextEditingController(); // A senha sempre é digitada novamente
@@ -112,6 +113,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _userRepository = Provider.of<UserRepository>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gerenciar Usuários'),
@@ -139,7 +141,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      onPressed: () => _showUserDialog(user: user),
+                      onPressed: () => _showUserDialog(context, user: user),
                     ),
                     // Impede que o admin se delete
                     if (user.role != UserRole.admin)
@@ -158,7 +160,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showUserDialog(),
+        onPressed: () => _showUserDialog(context),
         child: const Icon(Icons.add),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/app_route.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
+import 'package:rdcoletor/local/database_service.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -11,6 +12,8 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  String _statusMessage = '';
+
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -35,20 +38,23 @@ class _LoginState extends State<Login> {
 
     final success = await authService.login(_userController.text, _passwordController.text);
 
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuário ou senha inválidos.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-
     if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Usuário ou senha inválidos.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        final dbService = context.read<DatabaseService>();
+        await Future.delayed(const Duration(seconds: 1));
+        await dbService.init();
+      }
     }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override

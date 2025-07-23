@@ -1,49 +1,40 @@
 import 'package:rdcoletor/local/auth/model/user.dart';
-import 'package:rdcoletor/local/app_database.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:rdcoletor/local/database_service.dart';
 
+/// O Repositório de Usuários atua como uma camada intermediária entre a
+/// lógica de negócios (AuthService) e a camada de acesso a dados (DatabaseService).
+/// Ele define as operações de dados necessárias para a entidade 'User'.
 class UserRepository {
-  // Agora o repositório depende da abstração, não da implementação concreta.
-  final AppDatabase _appDatabase;
+  // O repositório depende do DatabaseService, que é a única fonte de verdade
+  // para todas as operações de banco de dados.
+  final DatabaseService _databaseService;
 
-  // A dependência é injetada pelo construtor.
-  UserRepository(this._appDatabase);
+  // A dependência é injetada via construtor, seguindo o princípio de Inversão de Dependência.
+  UserRepository(this._databaseService);
 
+  /// Encontra um usuário por nome de usuário e senha, delegando a chamada para o DatabaseService.
   Future<User?> findUserByCredentials(String username, String password) async {
-    final List<Map<String, dynamic>> maps = await _appDatabase.query(
-      'users',
-      where: 'username = ? AND password = ?',
-      whereArgs: [username, password],
-      limit: 1,
-    );
-
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    }
-    return null;
+    return await _databaseService.findUserByCredentials(username, password);
   }
 
+  /// Busca todos os usuários, delegando a chamada para o DatabaseService.
   Future<List<User>> getAllUsers() async {
-    final List<Map<String, dynamic>> maps = await _appDatabase.query('users', orderBy: 'username ASC');
-    return maps.map((map) => User.fromMap(map)).toList();
+    return await _databaseService.getAllUsers();
   }
 
+  /// Insere um novo usuário, delegando a chamada para o DatabaseService.
   Future<int> insertUser(User user) async {
-    // Retorna o ID do novo usuário inserido.
-    return await _appDatabase.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.fail);
+    return await _databaseService.insertUser(user);
   }
 
+  /// Atualiza um usuário existente, delegando a chamada para o DatabaseService.
+  /// O parâmetro 'token' foi removido pois não era utilizado na lógica de banco de dados.
   Future<int> updateUser(User user) async {
-    // Retorna o número de linhas afetadas (deve ser 1).
-    return await _appDatabase.update(
-      'users',
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
-    );
+    return await _databaseService.updateUser(user);
   }
 
-  Future<int> deleteUser(int id) async {
-    return await _appDatabase.delete('users', where: 'id = ?', whereArgs: [id]);
+  /// Deleta um usuário pelo seu ID, delegando a chamada para o DatabaseService.
+  Future<int> deleteUser(String id) async {
+    return await _databaseService.deleteUser(id);
   }
 }
