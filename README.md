@@ -24,3 +24,29 @@ Alguns dos recursos implementados (Ou não) estão abaixo:
 - [ ] Digitar o código de barras manualment (Para que seja usado um escaner de código de barras).
 - [ ] Tela de login para o colaborador.
 - [ ] Gerar o relatório das anotações.
+
+## Dependências
+Caso for compilar para o Desktop (Linux, Windows, MacOS) ou Mobile (Android, iOS), será necessário instalar o suporte para SQLite. Abaixo estão as instruções:
+### Linux
+No seu sistema Linux, instale o pacote de desenvolvimento do SQLite:
+
+Para Debian/Ubuntu:
+```
+sudo apt install libsqlite3-dev
+```
+Para Fedora:
+```
+sudo dnf install sqlite sqlite-devel
+```
+Para Arch Linux / Manjaro:
+```
+sudo pacman -S sqlite
+```
+### Windows
+-----
+### MacOS
+-----
+### Android
+-----
+### iOS
+-----
