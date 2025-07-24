@@ -21,8 +21,8 @@ class DatabaseService {
   DatabaseService() : _db = kIsWeb ? WebAppDatabase() : NativeAppDatabase();
 
   ///Inicializa o banco de dados local
-  Future<void> init() async {
-    await _db.init();
+  Future<bool> init() async {
+    return await _db.init();
   }
 
   // ===========================================================================

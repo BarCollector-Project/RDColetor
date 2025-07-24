@@ -18,18 +18,27 @@ class AuthService with ChangeNotifier {
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.role == UserRole.admin;
 
-  Future<bool> login(String username, String password) async {
-    // NOTA: Em um app real, a senha `password` seria transformada em hash
-    // antes de ser comparada no banco de dados.
+  /// Autentica as credenciais do usuário contra o repositório.
+  ///
+  /// Em caso de sucesso, retorna o objeto [User].
+  /// Em caso de falha, lança uma [Exception].
+  /// Este método **não** altera o estado de login global (`isLoggedIn`).
+  Future<User> authenticate(String username, String password) async {
     debugPrint("Checando usuário $username com senha $password");
     final user = await _userRepository.findUserByCredentials(username, password);
 
-    if (user != null) {
-      _currentUser = user;
-      notifyListeners(); // Notifica os "ouvintes" (widgets) que o estado mudou.
-      return true;
+    if (user == null) {
+      throw Exception('Usuário ou senha inválidos.');
     }
-    return false;
+    return user;
+  }
+
+  /// Finaliza o processo de login, definindo o usuário atual e notificando a UI.
+  ///
+  /// O `AuthWrapper` reagirá a esta chamada para navegar para a tela principal.
+  void completeSignIn(User user) {
+    _currentUser = user;
+    notifyListeners();
   }
 
   void logout() {

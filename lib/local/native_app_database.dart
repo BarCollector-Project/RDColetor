@@ -1,23 +1,71 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'app_database.dart';
 
+/// Implementação do [AppBatch] para a plataforma nativa, usando o `Batch` do sqflite.
+class _NativeAppBatch implements AppBatch {
+  final Batch _batch;
+
+  _NativeAppBatch(this._batch);
+
+  @override
+  void insert(String table, Map<String, dynamic> values, {ConflictAlgorithm? conflictAlgorithm}) {
+    _batch.insert(table, values, conflictAlgorithm: conflictAlgorithm);
+  }
+
+  @override
+  void update(String table, Map<String, dynamic> values, {String? where, List<Object?>? whereArgs}) {
+    _batch.update(table, values, where: where, whereArgs: whereArgs);
+  }
+
+  @override
+  void delete(String table, {String? where, List<Object?>? whereArgs}) {
+    _batch.delete(table, where: where, whereArgs: whereArgs);
+  }
+
+  @override
+  Future<List<Object?>> commit({bool? exclusive, bool? noResult}) => _batch.commit(exclusive: exclusive, noResult: noResult);
+}
+
 class NativeAppDatabase extends AppDatabase {
-  Database? _db;
+  Database? _database;
+
+  /// Getter privado para acessar a instância do banco de dados.
+  /// Lança um [StateError] claro se o banco de dados não for inicializado
+  /// antes de ser usado, prevenindo erros de "null check".
+  Database get _db {
+    if (_database == null) {
+      throw StateError('O banco de dados não foi inicializado. Chame init() primeiro.');
+    }
+    return _database!;
+  }
 
   @override
   Future<bool> init() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final path = join(dir.path, 'app_database.db');
+    // Evita reinicializações desnecessárias.
+    if (_database?.isOpen ?? false) {
+      return true;
+    }
 
-    _db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
-    return _db != null;
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      debugPrint("DB Path: ${dir.path}");
+      final path = join(dir.path, 'barcollector.db');
+
+      _database = await openDatabase(
+        path,
+        version: 1,
+        onCreate: _onCreate,
+      );
+      return _database?.isOpen ?? false;
+    } catch (e) {
+      debugPrint('Falha ao inicializar o banco de dados: $e');
+      _database = null; // Garante que o estado é consistente em caso de falha.
+      return false;
+    }
   }
 
   void _onCreate(Database db, int version) async {
@@ -47,18 +95,18 @@ class NativeAppDatabase extends AppDatabase {
 
   @override
   Future<bool> close() async {
-    await _db?.close();
+    await _database?.close();
     return true;
   }
 
   @override
   Future<int> insert(String table, Map<String, dynamic> values, {ConflictAlgorithm? conflictAlgorithm}) async {
-    return await _db!.insert(table, values, conflictAlgorithm: conflictAlgorithm ?? ConflictAlgorithm.replace);
+    return await _db.insert(table, values, conflictAlgorithm: conflictAlgorithm ?? ConflictAlgorithm.replace);
   }
 
   @override
   Future<List<Map<String, dynamic>>> query(String table, {String? where, List<Object?>? whereArgs, String? orderBy, int? limit}) async {
-    return await _db!.query(
+    return await _db.query(
       table,
       where: where,
       whereArgs: whereArgs,
@@ -69,7 +117,7 @@ class NativeAppDatabase extends AppDatabase {
 
   @override
   Future<int> update(String table, Map<String, dynamic> values, {String? where, List<Object?>? whereArgs}) async {
-    return await _db!.update(
+    return await _db.update(
       table,
       values,
       where: where,
@@ -79,7 +127,7 @@ class NativeAppDatabase extends AppDatabase {
 
   @override
   Future<int> delete(String table, {String? where, List<Object?>? whereArgs}) async {
-    return await _db!.delete(
+    return await _db.delete(
       table,
       where: where,
       whereArgs: whereArgs,
@@ -87,8 +135,9 @@ class NativeAppDatabase extends AppDatabase {
   }
 
   @override
-  Future<AppBatch> batch() {
-    // TODO: implement batch
-    throw UnimplementedError();
+  Future<AppBatch> batch() async {
+    // Usa o getter _db para garantir que o banco está inicializado.
+    final sqfliteBatch = _db.batch();
+    return _NativeAppBatch(sqfliteBatch);
   }
 }

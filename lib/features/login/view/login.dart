@@ -12,8 +12,6 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  String _statusMessage = '';
-
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -28,33 +26,75 @@ class _LoginState extends State<Login> {
 
   Future<void> _doLogin() async {
     if (_isLoading) return;
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     FocusScope.of(context).unfocus();
 
-    final authService = Provider.of<AuthService>(context, listen: false);
+    // Para garantir que o contexto não seja usado após uma operação assíncrona,
+    // capturamos os serviços e o navigator/scaffoldMessenger antes.
+    final authService = context.read<AuthService>();
+    final dbService = context.read<DatabaseService>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    final success = await authService.login(_userController.text, _passwordController.text);
+    try {
+      final user = await authService.authenticate(
+        _userController.text,
+        _passwordController.text,
+      );
 
-    if (mounted) {
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      final initSnackBarController = scaffoldMessenger.showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.blue.shade700,
+          content: const Row(
+            children: [
+              CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+              SizedBox(width: 16),
+              Text('Inicializando banco de dados...'),
+            ],
+          ),
+          duration: const Duration(minutes: 1),
+        ),
+      );
+
+      //await Future.delayed(Duration(seconds: 1));
+      final dbInitialized = await dbService.init();
+
+      initSnackBarController.close();
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
+      // 4. Se a inicialização foi bem-sucedida, mostra um SnackBar de sucesso.
+      if (dbInitialized) {
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
-            content: Text('Usuário ou senha inválidos.'),
+            content: Text('Banco de dados local inicializado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        if (!mounted) return;
+        authService.completeSignIn(user);
+      } else {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao inicializar o banco de dados local.'),
             backgroundColor: Colors.red,
           ),
         );
-      } else {
-        final dbService = context.read<DatabaseService>();
-        await Future.delayed(const Duration(seconds: 1));
-        await dbService.init();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Ocorreu um erro inesperado: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      // O bloco `finally` sempre será executado.
+      // É crucial verificar `mounted` aqui, porque se a navegação ocorreu no `try`,
+      // o widget não existe mais e chamar `setState` causaria o erro.
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
