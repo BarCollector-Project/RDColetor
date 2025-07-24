@@ -22,7 +22,16 @@ class DatabaseService {
 
   ///Inicializa o banco de dados local
   Future<bool> init() async {
-    return await _db.init();
+    bool result = await _db.init();
+    if (result) {
+      //Sincrinizar com o banco de dados web na inicialização
+      await syncProductsFromServer();
+    }
+    return result;
+  }
+
+  Future<bool> close() async {
+    return _db.close();
   }
 
   // ===========================================================================
@@ -36,6 +45,7 @@ class DatabaseService {
   Future<List<Product>> getAllProducts() async {
     // Corrigido: Especifica a tabela a ser consultada.
     final List<Map<String, dynamic>> maps = await _db.query(Tables.products);
+    debugPrint("Products: $maps");
 
     // Converte o resultado do banco (Map) para uma lista de objetos (Product).
     return List.generate(maps.length, (i) => Product.fromMap(maps[i]));
@@ -64,11 +74,12 @@ class DatabaseService {
   /// Se o produto já existir (baseado na chave primária), ele será substituído.
   /// Essencial para a sincronização.
   Future<void> insertOrUpdateProduct(Product product) async {
-    await _db.insert(
+    final result = await _db.insert(
       Tables.products,
       product.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    debugPrint("Insert result: $result");
   }
 
   // --- User Operations ---
@@ -170,7 +181,6 @@ class DatabaseService {
 
     if (response.statusCode == 200) {
       final List<dynamic> productListJson = json.decode(response.body);
-      // Assumindo que seu modelo Product tem um construtor `fromJson`.
       return productListJson.map((json) => Product.fromJson(json)).toList();
     } else {
       throw Exception('Falha ao carregar produtos do servidor: ${response.statusCode}');

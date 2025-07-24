@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
+import 'package:rdcoletor/local/database_service.dart';
 
 class Coletor extends StatefulWidget {
   const Coletor({super.key});
@@ -12,7 +14,7 @@ class Coletor extends StatefulWidget {
 class _ColetorScreenState extends State<Coletor> {
   final _barcodeController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  final _productRepository = ProductRepository();
+  late final _productRepository;
 
   Product? _foundProduct;
   final List<Map<String, dynamic>> _collectedItems = [];
@@ -20,6 +22,7 @@ class _ColetorScreenState extends State<Coletor> {
   @override
   void initState() {
     super.initState();
+    _productRepository = ProductRepository(Provider.of<DatabaseService>(context, listen: false));
     // Adiciona um listener para buscar o produto enquanto o usuário digita
     _barcodeController.addListener(() {
       if (_barcodeController.text.isNotEmpty) {

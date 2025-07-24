@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
 
@@ -10,7 +11,7 @@ class Products extends StatefulWidget {
 }
 
 class _ProductsState extends State<Products> {
-  final ProductRepository _productRepository = ProductRepository();
+  late final ProductRepository _productRepository;
   final TextEditingController _searchController = TextEditingController();
 
   late Future<List<Product>> _productsFuture;
@@ -20,6 +21,7 @@ class _ProductsState extends State<Products> {
   @override
   void initState() {
     super.initState();
+    _productRepository = Provider.of<ProductRepository>(context, listen: false);
     _productsFuture = _loadProducts();
     _searchController.addListener(_filterProducts);
   }

@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart';
 import 'package:rdcoletor/local/coletor/db/controller/importer.dart';
+import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 
 // Uma classe simples para encapsular o resultado da importação.
 class ImportResult {
@@ -20,7 +20,9 @@ class ImportResult {
 }
 
 class BackgroundImportService {
-  final Importer _importer = Importer();
+  final Importer _importer;
+
+  BackgroundImportService(ProductRepository productRepository) : _importer = Importer(productRepository);
 
   // **IMPORTANTE**: Este método é um placeholder.
   // Você deve implementar aqui a lógica para buscar o arquivo CSV do seu servidor

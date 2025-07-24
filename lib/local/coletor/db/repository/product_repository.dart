@@ -4,7 +4,10 @@ import 'package:rdcoletor/local/database_service.dart';
 const int _kBarcodeMinLength = 13;
 
 class ProductRepository {
-  final _dbService = DatabaseService();
+  final DatabaseService _dbService;
+
+  // Injeta o DatabaseService para garantir que a mesma instância inicializada seja usada.
+  ProductRepository(this._dbService);
 
   // Insere uma lista de produtos no banco de dados.
   // Usa um batch para performance e limpa a tabela antes para evitar duplicatas.

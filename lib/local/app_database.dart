@@ -1,6 +1,3 @@
-import 'package:flutter/foundation.dart';
-import 'package:rdcoletor/local/native_app_database.dart';
-import 'package:rdcoletor/local/web_app_database.dart';
 import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 
 /// Interface para operações em lote (batch), para abstrair a implementação
@@ -37,19 +34,5 @@ abstract class AppDatabase {
   Future<int> delete(String table, {String? where, List<Object?>? whereArgs});
 
   /// Cria um novo objeto de lote para executar múltiplas operações.
-  Future<AppBatch> batch();
-}
-
-/// Fábrica (Factory) que fornece a instância correta do banco de dados
-/// com base na plataforma em que o aplicativo está sendo executado.
-class DatabaseProvider {
-  static AppDatabase getDatabase() {
-    if (kIsWeb) {
-      // Para a web, retornamos uma implementação compatível.
-      return WebAppDatabase();
-    } else {
-      // Para plataformas nativas (mobile/desktop), retornamos a implementação com sqflite.
-      return NativeAppDatabase();
-    }
-  }
+  Future<AppBatch?> batch();
 }

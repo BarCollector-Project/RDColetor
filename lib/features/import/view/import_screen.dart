@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/service/background_import_service.dart';
 
 class ImportScreen extends StatefulWidget {
@@ -9,9 +11,15 @@ class ImportScreen extends StatefulWidget {
 }
 
 class _ImportScreenState extends State<ImportScreen> {
-  final BackgroundImportService _importService = BackgroundImportService();
+  late final BackgroundImportService _importService;
   bool _isLoading = false;
   String _statusMessage = 'Pronto para sincronização manual.';
+
+  @override
+  void initState() {
+    super.initState();
+    _importService = BackgroundImportService(Provider.of<ProductRepository>(context, listen: false));
+  }
 
   Future<void> _runManualImport({bool usePicker = false}) async {
     if (_isLoading) return;

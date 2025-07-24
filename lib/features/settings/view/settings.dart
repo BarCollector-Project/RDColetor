@@ -19,8 +19,14 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  final _productRepository = ProductRepository();
+  late final _productRepository;
   bool _isChangingPath = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _productRepository = ProductRepository(Provider.of<DatabaseService>(context, listen: false));
+  }
 
   void _showChangeCredentialDialog({required bool isChangingUsername}) {
     final controller = TextEditingController();

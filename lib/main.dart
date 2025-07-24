@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/app_route.dart';
 import 'package:rdcoletor/features/setup/view/database_setup_wrapper.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
+import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
 import 'package:rdcoletor/local/database_service.dart';
 import 'package:rdcoletor/local/server/services/connection_service.dart';
@@ -25,8 +26,6 @@ Future<void> main() async {
   // Cria e inicializa o DatabaseService antes de o app rodar.
   // Isso garante que o banco de dados estará pronto para uso.
   final databaseService = DatabaseService();
-  await databaseService.init();
-
   runApp(
     // MultiProvider permite registrar vários providers de uma vez.
     MultiProvider(
@@ -55,6 +54,13 @@ Future<void> main() async {
             return AuthService(
               context.read<UserRepository>(),
             );
+          },
+        ),
+        // 5. Provider para o ProductRepository.
+        //    Ele depende do DatabaseService, que é lido do contexto.
+        Provider<ProductRepository>(
+          create: (context) {
+            return ProductRepository(context.read<DatabaseService>());
           },
         ),
       ],

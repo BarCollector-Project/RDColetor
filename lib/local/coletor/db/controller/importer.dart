@@ -2,11 +2,15 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
+import 'package:rdcoletor/local/database_service.dart';
 
 class Importer {
-  final ProductRepository _productRepository = ProductRepository();
+  final ProductRepository _productRepository;
+
+  Importer(this._productRepository);
 
   //Os CSV é gerado pela rotina RELATORIOS>PRODUTOS, assim gravar o relatório no formato CSV.
   Future<int> importFromSGLinearCSV(File csv) async {

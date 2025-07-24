@@ -12,16 +12,18 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final _importService = BackgroundImportService();
+  //final _importService = BackgroundImportService();
   bool _isImporting = false;
 
   @override
   void initState() {
     super.initState();
+
     // Dispara a importação em segundo plano ao entrar na tela.
     //_triggerBackgroundImport();
   }
 
+  /*
   Future<void> _triggerBackgroundImport() async {
     if (mounted) {
       setState(() {
@@ -40,6 +42,7 @@ class _HomeState extends State<Home> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
     }
   }
+  */
 
   /// Constrói um título de seção padronizado.
   Widget _buildSectionTitle(String title) {

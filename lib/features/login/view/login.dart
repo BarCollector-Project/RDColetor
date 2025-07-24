@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rdcoletor/features/app_route.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
 import 'package:rdcoletor/local/database_service.dart';
 
@@ -22,6 +21,22 @@ class _LoginState extends State<Login> {
     _userController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _doLogoutObserver();
+  }
+
+  /// Aguarda até que o usuário faça logout para que o database local seja fechado
+  Future<void> _doLogoutObserver() async {
+    final authService = context.read<AuthService>();
+    if (!authService.isLoggedIn) {
+      final dbService = context.read<DatabaseService>();
+      await dbService.close();
+    }
   }
 
   Future<void> _doLogin() async {
@@ -83,6 +98,7 @@ class _LoginState extends State<Login> {
         );
       }
     } catch (e) {
+      debugPrint("Ocorreu um erro inesperado: $e");
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Ocorreu um erro inesperado: $e'), backgroundColor: Colors.red),
