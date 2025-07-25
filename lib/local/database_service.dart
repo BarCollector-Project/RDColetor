@@ -1,85 +1,71 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:rdcoletor/local/app_database.dart';
-import 'package:rdcoletor/local/auth/model/user.dart';
-import 'package:rdcoletor/local/coletor/db/tables.dart';
-import 'package:rdcoletor/local/coletor/model/product.dart';
-import 'package:rdcoletor/local/native_app_database.dart';
+import 'package:rdcoletor/local/drift_database.dart';
 import 'package:rdcoletor/local/server/services/connection_service.dart';
-import 'package:rdcoletor/local/web_app_database.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
 /// Serviço central para gerenciar o banco de dados local e a comunicação com o servidor.
 class DatabaseService {
-  late final AppDatabase _db;
+  // A instância do banco de dados Drift, que funciona em todas as plataformas.
+  late final AppDb _db;
   final ConnectionService _connectionService = ConnectionService();
 
-  DatabaseService() : _db = kIsWeb ? WebAppDatabase() : NativeAppDatabase();
+  DatabaseService() {
+    // A lógica de qual banco usar (SQLite ou IndexedDB) já está encapsulada.
+    _db = AppDb();
+  }
 
   ///Inicializa o banco de dados local
   Future<bool> init() async {
-    bool result = await _db.init();
-    if (result) {
-      //Sincrinizar com o banco de dados web na inicialização
+    //Execulta um comando para consulta no banco apenas para chegar se está funcionando. Logo após, iniciar a sincronização
+    try {
+      await _db.customSelect('SELECT 1').getSingle();
+      // Sincronizar com o banco de dados web na inicialização
       await syncProductsFromServer();
+
+      return true;
+    } catch (e) {
+      debugPrint('Falha ao inicializar ou sincronizar o banco de dados: $e');
+      return false;
     }
-    return result;
   }
 
   Future<bool> close() async {
-    return _db.close();
+    try {
+      await _db.close();
+      debugPrint("Banco de dados local fechado com sucesso.");
+      return true;
+    } catch (e) {
+      debugPrint("Erro ao fechar o banco de dados: $e");
+      return false;
+    }
   }
 
   // ===========================================================================
-  // PARTE 1: Operações do Banco de Dados Local (SQLite)
+  // PARTE 1: Operações do Banco de Dados Local (Drift)
   // ===========================================================================
 
   // --- Product Operations ---
 
   /// Busca todos os produtos salvos no banco de dados local.
-  /// Retorna uma lista de objetos [Product] para segurança de tipo.
   Future<List<Product>> getAllProducts() async {
-    // Corrigido: Especifica a tabela a ser consultada.
-    final List<Map<String, dynamic>> maps = await _db.query(Tables.products);
-    debugPrint("Products: $maps");
-
-    // Converte o resultado do banco (Map) para uma lista de objetos (Product).
-    return List.generate(maps.length, (i) => Product.fromMap(maps[i]));
+    // A chamada agora é type-safe e muito mais simples!
+    return _db.select(_db.products).get();
   }
 
   /// Busca um produto específico pelo código de barras no banco local.
-  /// Retorna um objeto [Product] ou `null` se não for encontrado.
   Future<Product?> getProductByBarcode(String barcode) async {
-    // Corrigido: Adiciona a cláusula 'where' para filtrar pelo código de barras.
-    try {
-      final List<Map<String, dynamic>> maps = await _db.query(
-        Tables.products,
-        where: 'barcode = ?',
-        whereArgs: [barcode],
-        limit: 1, // Otimização: só precisamos de um resultado.
-      );
-
-      if (maps.isNotEmpty) {
-        return Product.fromMap(maps.first);
-      }
-    } catch (_) {}
-    return null;
+    return (_db.select(_db.products)..where((tbl) => tbl.barcode.equals(barcode))).getSingleOrNull();
   }
 
   /// Insere ou atualiza um produto no banco de dados local.
-  /// Se o produto já existir (baseado na chave primária), ele será substituído.
-  /// Essencial para a sincronização.
   Future<void> insertOrUpdateProduct(Product product) async {
-    final result = await _db.insert(
-      Tables.products,
-      product.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    debugPrint("Insert result: $result");
+    // O Drift lida com a lógica de "insert or replace" de forma elegante.
+    await _db.into(_db.products).insertOnConflictUpdate(product);
   }
 
   // --- User Operations ---
@@ -94,32 +80,23 @@ class DatabaseService {
 
   /// Busca todos os usuários no banco local.
   Future<List<User>> getAllUsers() async {
-    final List<Map<String, dynamic>> maps = await _db.query(Tables.users, orderBy: 'username ASC');
-    return maps.map((map) => User.fromMap(map)).toList();
+    return (_db.select(_db.users)..orderBy([(u) => OrderingTerm(expression: u.username)])).get();
   }
 
   /// Insere um novo usuário no banco local.
   Future<int> insertUser(User user) async {
-    return await _db.insert(
-      Tables.users,
-      user.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail, // Falha se o usuário já existir
-    );
+    // O modo padrão já é falhar em caso de conflito.
+    return _db.into(_db.users).insert(user);
   }
 
   /// Atualiza um usuário existente no banco local.
   Future<int> updateUser(User user) async {
-    return await _db.update(
-      Tables.users,
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
-    );
+    return (_db.update(_db.users)..where((u) => u.id.equals(user.id))).write(user);
   }
 
   /// Deleta um usuário pelo ID.
   Future<int> deleteUser(String id) async {
-    return await _db.delete(Tables.users, where: 'id = ?', whereArgs: [id]);
+    return (_db.delete(_db.users)..where((u) => u.id.equals(id))).go();
   }
 
   // ===========================================================================
@@ -155,9 +132,12 @@ class DatabaseService {
         // Decodifica o payload para criar o objeto User
         final jwt = JWT.decode(token);
         final payload = jwt.payload as Map<String, dynamic>;
-        // A senha não é retornada ou armazenada no estado do app por segurança.
-        payload['password'] = '';
-        return User.fromMap(payload);
+        return User(
+          id: payload['id'] as String,
+          username: payload['username'] as String,
+          name: payload['name'] as String,
+          role: payload['role'] as String,
+        );
       }
     }
     return null;
@@ -181,7 +161,8 @@ class DatabaseService {
 
     if (response.statusCode == 200) {
       final List<dynamic> productListJson = json.decode(response.body);
-      return productListJson.map((json) => Product.fromJson(json)).toList();
+      // O Drift gera o método fromJson para nós!
+      return productListJson.map((json) => Product.fromJson(json as Map<String, dynamic>)).toList();
     } else {
       throw Exception('Falha ao carregar produtos do servidor: ${response.statusCode}');
     }
@@ -202,13 +183,12 @@ class DatabaseService {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      // Assumindo que seu modelo Product tem um método `toJson`.
       body: json.encode(product.toJson()),
     );
 
     if (response.statusCode == 201) {
       // 201: Created
-      return Product.fromJson(json.decode(response.body));
+      return Product.fromJson(json.decode(response.body) as Map<String, dynamic>);
     } else {
       throw Exception('Falha ao criar produto no servidor: ${response.statusCode}');
     }

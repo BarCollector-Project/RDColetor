@@ -1,15 +1,9 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/app_route.dart';
-import 'package:rdcoletor/local/auth/model/user.dart';
-import 'package:rdcoletor/local/auth/repository/user_repository.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/database_service.dart';
-import 'package:rdcoletor/local/path_service.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -19,7 +13,7 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  late final _productRepository;
+  late final ProductRepository _productRepository;
   bool _isChangingPath = false;
 
   @override

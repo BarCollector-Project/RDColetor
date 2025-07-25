@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
-import 'package:rdcoletor/local/coletor/model/product.dart';
+import 'package:rdcoletor/local/drift_database.dart';
 
 class Products extends StatefulWidget {
   const Products({super.key});
@@ -44,12 +44,11 @@ class _ProductsState extends State<Products> {
   void _filterProducts() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredProducts =
-          _allProducts.where((product) {
-            final nameMatches = product.name.toLowerCase().contains(query);
-            final codeMatches = product.barcode.toLowerCase().contains(query);
-            return nameMatches || codeMatches;
-          }).toList();
+      _filteredProducts = _allProducts.where((product) {
+        final nameMatches = product.name.toLowerCase().contains(query);
+        final codeMatches = product.barcode.toLowerCase().contains(query);
+        return nameMatches || codeMatches;
+      }).toList();
     });
   }
 

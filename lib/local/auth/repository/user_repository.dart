@@ -1,5 +1,5 @@
-import 'package:rdcoletor/local/auth/model/user.dart';
 import 'package:rdcoletor/local/database_service.dart';
+import 'package:rdcoletor/local/drift_database.dart' show User;
 
 /// O Repositório de Usuários atua como uma camada intermediária entre a
 /// lógica de negócios (AuthService) e a camada de acesso a dados (DatabaseService).

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:rdcoletor/local/auth/model/user.dart';
+import 'package:rdcoletor/local/auth/model/user.dart' show UserRole;
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
+import 'package:rdcoletor/local/drift_database.dart' show User;
 
 /// Serviço para gerenciar o estado de autenticação do usuário.
 ///
@@ -16,7 +17,7 @@ class AuthService with ChangeNotifier {
   User? get currentUser => _currentUser;
 
   bool get isLoggedIn => _currentUser != null;
-  bool get isAdmin => _currentUser?.role == UserRole.admin;
+  bool get isAdmin => _currentUser?.role == UserRole.admin.name;
 
   /// Autentica as credenciais do usuário contra o repositório.
   ///
