@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/load_screen/view/loading_screen.dart';
-import 'package:rdcoletor/features/setup/view/database_setup_wrapper.dart';
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/database_service.dart';
 import 'package:rdcoletor/local/server/services/connection_service.dart' hide ConnectionState;
+import 'package:rdcoletor/main.dart';
 
 /// Um registro simples para retornar os serviços inicializados.
 typedef InitializedServices = ({
@@ -56,17 +56,21 @@ class _AppInitializerState extends State<AppInitializer> {
       future: _servicesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Enquanto os serviços estão inicializando, mostre a tela de loading.
-          return const LoadingScreen();
+          // Enquanto os serviços estão inicializando, mostre a tela de loading
+          // dentro de um MaterialApp para ter um contexto visual básico.
+          return const MaterialApp(home: LoadingScreen());
         }
 
         if (snapshot.hasError) {
           // Se algo der errado, mostre uma tela de erro.
-          return Scaffold(body: Center(child: Text('Erro ao inicializar: ${snapshot.error}')));
+          return MaterialApp(
+            home: Scaffold(body: Center(child: Text('Erro ao inicializar: ${snapshot.error}'))),
+          );
         }
 
-        // Quando a inicialização estiver completa, construa o app principal
-        // com os providers usando os serviços que acabaram de ser criados.
+        // Quando a inicialização estiver completa, injeta os providers
+        // ACIMA do MaterialApp (MainApp) para que todas as rotas (home, named routes)
+        // tenham acesso a eles.
         final services = snapshot.requireData;
         return MultiProvider(
           providers: [
@@ -76,7 +80,7 @@ class _AppInitializerState extends State<AppInitializer> {
             ChangeNotifierProvider<AuthService>(create: (context) => AuthService(context.read<UserRepository>())),
             Provider<ProductRepository>(create: (context) => ProductRepository(context.read<DatabaseService>())),
           ],
-          builder: (context, child) => const DatabaseSetupWrapper(),
+          child: const MainApp(),
         );
       },
     );

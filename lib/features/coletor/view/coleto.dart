@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
-import 'package:rdcoletor/local/database_service.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 class Coletor extends StatefulWidget {
   const Coletor({super.key});
@@ -22,7 +22,7 @@ class _ColetorScreenState extends State<Coletor> {
   @override
   void initState() {
     super.initState();
-    _productRepository = ProductRepository(Provider.of<DatabaseService>(context, listen: false));
+    _productRepository = context.read<ProductRepository>();
     // Adiciona um listener para buscar o produto enquanto o usuário digita
     _barcodeController.addListener(() {
       if (_barcodeController.text.isNotEmpty) {
@@ -51,11 +51,25 @@ class _ColetorScreenState extends State<Coletor> {
     }
   }
 
-  void _scanBarcode() {
-    // TODO: Implementar a navegação para a tela de scanner
+  Future<String?> _scanBarcode() async {
+    String? res = await SimpleBarcodeScanner.scanBarcode(
+      context,
+      barcodeAppBar: const BarcodeAppBar(
+        appBarTitle: 'Test',
+        centerTitle: false,
+        enableBackButton: true,
+        backButtonIcon: Icon(Icons.arrow_back_ios),
+      ),
+      isShowFlashIcon: true,
+      delayMillis: 2000,
+      cameraFace: CameraFace.front,
+    );
+    return res;
+
+    /*
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Funcionalidade de scanner a ser implementada.')),
-    );
+    );*/
   }
 
   void _addItemToList() {
@@ -138,7 +152,7 @@ class _ColetorScreenState extends State<Coletor> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.qr_code_scanner),
-                        onPressed: _scanBarcode,
+                        onPressed: () async => _barcodeController.text = await _scanBarcode() ?? '',
                       ),
                     ),
                     keyboardType: TextInputType.text,
@@ -177,26 +191,25 @@ class _ColetorScreenState extends State<Coletor> {
             const Text('Itens Coletados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Expanded(
-              child:
-                  _collectedItems.isEmpty
-                      ? const Center(child: Text('Nenhum item coletado ainda.'))
-                      : ListView.builder(
-                        itemCount: _collectedItems.length,
-                        itemBuilder: (context, index) {
-                          final item = _collectedItems[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              title: Text(item['name'].toString()),
-                              subtitle: Text('Código: ${item['code']}'),
-                              trailing: Text(
-                                'Qtd: ${item['quantity']}',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
+              child: _collectedItems.isEmpty
+                  ? const Center(child: Text('Nenhum item coletado ainda.'))
+                  : ListView.builder(
+                      itemCount: _collectedItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _collectedItems[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: ListTile(
+                            title: Text(item['name'].toString()),
+                            subtitle: Text('Código: ${item['code']}'),
+                            trailing: Text(
+                              'Qtd: ${item['quantity']}',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
