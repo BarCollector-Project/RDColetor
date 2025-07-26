@@ -1,9 +1,10 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:rdcoletor/local/drift_database.dart';
+import 'package:rdcoletor/local/auth/model/user.dart';
+import 'package:rdcoletor/local/coletor/model/product.dart';
+import 'package:rdcoletor/local/drift_database.dart' show AppDb;
 import 'package:rdcoletor/local/server/services/connection_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
@@ -21,12 +22,13 @@ class DatabaseService {
 
   ///Inicializa o banco de dados local
   Future<bool> init() async {
-    //Execulta um comando para consulta no banco apenas para chegar se está funcionando. Logo após, iniciar a sincronização
     try {
-      await _db.customSelect('SELECT 1').getSingle();
+      debugPrint("Inicializando banco de dados local...");
+      //await _db.customSelect('SELECT 1').getSingle();
       // Sincronizar com o banco de dados web na inicialização
       await syncProductsFromServer();
 
+      debugPrint("Banco de dados local inicializado com sucesso.");
       return true;
     } catch (e) {
       debugPrint('Falha ao inicializar ou sincronizar o banco de dados: $e');
@@ -46,7 +48,7 @@ class DatabaseService {
   }
 
   // ===========================================================================
-  // PARTE 1: Operações do Banco de Dados Local (Drift)
+  //                  Operações do Banco de Dados Local (Drift)
   // ===========================================================================
 
   // --- Product Operations ---
@@ -54,18 +56,22 @@ class DatabaseService {
   /// Busca todos os produtos salvos no banco de dados local.
   Future<List<Product>> getAllProducts() async {
     // A chamada agora é type-safe e muito mais simples!
-    return _db.select(_db.products).get();
+    return (await _db.select(_db.products).get()).map((data) => Product.fromDrift(data)).toList();
   }
 
   /// Busca um produto específico pelo código de barras no banco local.
   Future<Product?> getProductByBarcode(String barcode) async {
-    return (_db.select(_db.products)..where((tbl) => tbl.barcode.equals(barcode))).getSingleOrNull();
+    final product = await (_db.select(_db.products)..where((tbl) => tbl.barcode.equals(barcode))).getSingleOrNull();
+    if (product != null) {
+      return Product.fromDrift(product);
+    }
+    return null;
   }
 
   /// Insere ou atualiza um produto no banco de dados local.
   Future<void> insertOrUpdateProduct(Product product) async {
     // O Drift lida com a lógica de "insert or replace" de forma elegante.
-    await _db.into(_db.products).insertOnConflictUpdate(product);
+    await _db.into(_db.products).insertOnConflictUpdate(product.toDriftCompanion());
   }
 
   // --- User Operations ---
@@ -78,29 +84,38 @@ class DatabaseService {
     return await _fetchUserFromServer(username, password);
   }
 
+  /// ------------------------------------------------
+  /// A tablea Users do database local não existe
+  /// Os usuário serão obtidos diretamente no servidor e quaiser operações nesta tabela
+  /// ------------------------------------------------
+
   /// Busca todos os usuários no banco local.
   Future<List<User>> getAllUsers() async {
-    return (_db.select(_db.users)..orderBy([(u) => OrderingTerm(expression: u.username)])).get();
+    //return (await (_db.select(_db.users)..orderBy([(u) => OrderingTerm(expression: u.username)])).get()).map((data) => User.fromDrift(data)).toList();
+    return [];
   }
 
   /// Insere um novo usuário no banco local.
   Future<int> insertUser(User user) async {
     // O modo padrão já é falhar em caso de conflito.
-    return _db.into(_db.users).insert(user);
+    //return _db.into(_db.users).insert(user.toDriftCompanion());
+    return 0;
   }
 
   /// Atualiza um usuário existente no banco local.
   Future<int> updateUser(User user) async {
-    return (_db.update(_db.users)..where((u) => u.id.equals(user.id))).write(user);
+    //return (_db.update(_db. )..where((u) => u.id.equals(user.id!))).write(user.toDriftCompanion());
+    return 0;
   }
 
   /// Deleta um usuário pelo ID.
   Future<int> deleteUser(String id) async {
-    return (_db.delete(_db.users)..where((u) => u.id.equals(id))).go();
+    //return (_db.delete(_db.users)..where((u) => u.id.equals(id))).go();
+    return 0;
   }
 
   // ===========================================================================
-  // PARTE 2: Comunicação com o Servidor (API Dart Frog)
+  //                Comunicação com o Servidor (API Dart Frog)
   // ===========================================================================
 
   /// Obtém o token de autenticação salvo localmente.
@@ -135,8 +150,7 @@ class DatabaseService {
         return User(
           id: payload['id'] as String,
           username: payload['username'] as String,
-          name: payload['name'] as String,
-          role: payload['role'] as String,
+          role: UserRole.fromString(payload['role'] as String),
         );
       }
     }

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
-import 'package:rdcoletor/local/coletor/service/background_import_service.dart';
 
 class ImportScreen extends StatefulWidget {
   const ImportScreen({super.key});
@@ -11,14 +8,12 @@ class ImportScreen extends StatefulWidget {
 }
 
 class _ImportScreenState extends State<ImportScreen> {
-  late final BackgroundImportService _importService;
   bool _isLoading = false;
   String _statusMessage = 'Pronto para sincronização manual.';
 
   @override
   void initState() {
     super.initState();
-    _importService = BackgroundImportService(Provider.of<ProductRepository>(context, listen: false));
   }
 
   Future<void> _runManualImport({bool usePicker = false}) async {
@@ -29,20 +24,11 @@ class _ImportScreenState extends State<ImportScreen> {
       _statusMessage = 'Iniciando sincronização...';
     });
 
-    final result = await _importService.runImport(picker: usePicker);
-
     if (mounted) {
-      final message = result.success ? '${result.productsImported} produtos sincronizados com sucesso!' : 'Falha na sincronização: ${result.errorMessage}';
-      final color = result.success ? Colors.green : Colors.red;
-
       setState(() {
         _isLoading = false;
-        _statusMessage = message;
+        _statusMessage = "";
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: color),
-      );
     }
   }
 

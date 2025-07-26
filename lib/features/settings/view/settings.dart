@@ -24,6 +24,8 @@ class _SettingsState extends State<Settings> {
 
   void _showChangeCredentialDialog({required bool isChangingUsername}) {
     final controller = TextEditingController();
+    final passwordController = TextEditingController();
+
     final authService = Provider.of<AuthService>(context, listen: false);
 
     showDialog(
@@ -31,21 +33,38 @@ class _SettingsState extends State<Settings> {
       builder: (context) {
         return AlertDialog(
           title: Text(isChangingUsername ? 'Alterar Nome de Usuário' : 'Alterar Senha'),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(labelText: isChangingUsername ? 'Novo nome de usuário' : 'Nova senha'),
-            obscureText: !isChangingUsername,
+          content: Column(
+            children: [
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: isChangingUsername ? 'Senha' : 'Senha atual'),
+                obscureText: !isChangingUsername,
+              ),
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(labelText: isChangingUsername ? 'Novo nome de usuário' : 'Nova senha'),
+                obscureText: !isChangingUsername,
+              ),
+            ],
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
             ElevatedButton(
               onPressed: () async {
-                if (controller.text.isNotEmpty) {
+                if (controller.text.isNotEmpty && passwordController.text.isNotEmpty) {
                   await authService.updateUserCredentials(
+                    password: passwordController.text,
                     newUsername: isChangingUsername ? controller.text : null,
                     newPassword: !isChangingUsername ? controller.text : null,
                   );
                   Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Preencha todos os campos.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               },
               child: const Text('Salvar'),

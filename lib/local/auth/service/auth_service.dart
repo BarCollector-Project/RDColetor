@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:rdcoletor/local/auth/model/user.dart' show UserRole;
+import 'package:rdcoletor/local/auth/model/user.dart' show UserRole, User;
 import 'package:rdcoletor/local/auth/repository/user_repository.dart';
-import 'package:rdcoletor/local/drift_database.dart' show User;
 
 /// Serviço para gerenciar o estado de autenticação do usuário.
 ///
@@ -17,7 +16,7 @@ class AuthService with ChangeNotifier {
   User? get currentUser => _currentUser;
 
   bool get isLoggedIn => _currentUser != null;
-  bool get isAdmin => _currentUser?.role == UserRole.admin.name;
+  bool get isAdmin => UserRole.admin == _currentUser?.role;
 
   /// Autentica as credenciais do usuário contra o repositório.
   ///
@@ -48,9 +47,15 @@ class AuthService with ChangeNotifier {
   }
 
   /// Atualiza as credenciais do usuário logado e atualiza o estado local.
-  Future<void> updateUserCredentials({String? newUsername, String? newPassword}) async {
+  /// Um [Exception] é lançado caso o [password] estiver incorreto.
+  Future<void> updateUserCredentials({required String password, String? newUsername, String? newPassword}) async {
     if (_currentUser == null) return;
 
+    final user = await _userRepository.findUserByCredentials(_currentUser!.username, password);
+
+    if (user == null) {
+      throw Exception('Senha incorreta.');
+    }
     final updatedUser = _currentUser!.copyWith(
       username: newUsername ?? _currentUser!.username,
       password: newPassword ?? _currentUser!.password,

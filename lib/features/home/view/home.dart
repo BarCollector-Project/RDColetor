@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/features/app_route.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
-import 'package:rdcoletor/local/coletor/service/background_import_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -22,27 +21,6 @@ class _HomeState extends State<Home> {
     // Dispara a importação em segundo plano ao entrar na tela.
     //_triggerBackgroundImport();
   }
-
-  /*
-  Future<void> _triggerBackgroundImport() async {
-    if (mounted) {
-      setState(() {
-        _isImporting = true;
-      });
-    }
-
-    final result = await _importService.runImport();
-
-    if (mounted) {
-      setState(() {
-        _isImporting = false;
-      });
-      final message = result.success ? 'Sincronização concluída: ${result.productsImported} produtos.' : 'Falha na sincronização: ${result.errorMessage}';
-      final color = result.success ? Colors.green : Colors.red;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
-    }
-  }
-  */
 
   /// Constrói um título de seção padronizado.
   Widget _buildSectionTitle(String title) {

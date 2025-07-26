@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
+import 'package:rdcoletor/local/drift_database.dart';
+
 enum UserRole {
   admin,
   common;
@@ -13,14 +16,14 @@ enum UserRole {
 class User {
   final String? id;
   final String username;
-  final String password; // Em um app real, isso deve ser um hash!
+  final String? password;
   final UserRole role;
   String? token;
 
   User({
     this.id,
     required this.username,
-    required this.password,
+    this.password,
     required this.role,
   });
 
@@ -28,7 +31,7 @@ class User {
     return User(
       id: map['id'] as String?,
       username: map['username'] as String,
-      password: map['password'] as String,
+      password: map['password'] as String?,
       role: UserRole.fromString(map['role'] as String),
     );
   }
@@ -38,7 +41,6 @@ class User {
     return User(
       id: jsonMap['id'] as String?,
       username: jsonMap['username'] as String,
-      password: jsonMap['password'] as String,
       role: UserRole.fromString(jsonMap['role'] as String),
     );
   }
@@ -53,13 +55,7 @@ class User {
   }
 
   /// Cria uma cópia do objeto User, permitindo a alteração de alguns campos.
-  User copyWith({
-    String? id,
-    String? username,
-    String? password,
-    UserRole? role,
-    String? token,
-  }) {
+  User copyWith({String? id, String? username, String? password, UserRole? role}) {
     return User(
       id: id ?? this.id,
       username: username ?? this.username,

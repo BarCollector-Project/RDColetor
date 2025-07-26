@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/auth/model/user.dart';
-import 'package:rdcoletor/local/auth/repository/user_repository.dart';
+import 'package:rdcoletor/local/auth/repository/user_repository.dart' show UserRepository;
 
 class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
@@ -56,13 +56,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     DropdownButton<UserRole>(
                       value: selectedRole,
                       isExpanded: true,
-                      items:
-                          UserRole.values.map((role) {
-                            return DropdownMenuItem(
-                              value: role,
-                              child: Text(role.name),
-                            );
-                          }).toList(),
+                      items: UserRole.values.map((role) {
+                        return DropdownMenuItem(
+                          value: role,
+                          child: Text(role.name),
+                        );
+                      }).toList(),
                       onChanged: (value) {
                         if (value != null) {
                           setDialogState(() {

@@ -1,5 +1,5 @@
+import 'package:rdcoletor/local/coletor/model/product.dart';
 import 'package:rdcoletor/local/database_service.dart';
-import 'package:rdcoletor/local/drift_database.dart';
 
 const int _kBarcodeMinLength = 13;
 

@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
+import 'package:rdcoletor/local/drift_database.dart';
+
 /// A classe modelo que representa um único produto.
 /// Ela contém a lógica para serialização/desserialização de e para
 /// Map (para o banco de dados local) e JSON (para a API do servidor).
@@ -31,6 +34,26 @@ class Product {
       // SQLite não tem tipo DateTime, então convertemos de String (ISO 8601).
       createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at']) : null,
       updatedAt: map['updated_at'] != null ? DateTime.tryParse(map['updated_at']) : null,
+    );
+  }
+
+  /// Converte um [ProductData] do Drift em um [Product] do aplicativo
+  factory Product.fromDrift(ProductData data) {
+    return Product(
+      id: data.id,
+      name: data.name,
+      barcode: data.barcode,
+      price: data.price,
+    );
+  }
+
+  /// Converte um [Product] do aplicativo para um [ProductsCompanion] do Drift
+  ProductsCompanion toDriftCompanion() {
+    return ProductsCompanion(
+      id: id == null ? Value.absent() : Value(id!),
+      name: Value(name),
+      barcode: Value(barcode),
+      price: Value(price),
     );
   }
 
