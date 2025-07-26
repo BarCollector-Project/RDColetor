@@ -14,7 +14,6 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   late final ProductRepository _productRepository;
-  bool _isChangingPath = false;
 
   @override
   void initState() {

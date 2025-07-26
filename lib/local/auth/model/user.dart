@@ -1,8 +1,5 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Value;
-import 'package:rdcoletor/local/drift_database.dart';
-
 enum UserRole {
   admin,
   common;

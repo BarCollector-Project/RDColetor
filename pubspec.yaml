@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   mobile_scanner: ^6.0.6
-  path_provider: ^2.1.3 # Para caminhos de arquivo em nativo
+  path_provider: ^2.1.3 
   path: ^1.9.0
   provider: ^6.1.2
   shared_preferences: ^2.2.3
@@ -19,8 +19,9 @@ dependencies:
   http: ^1.4.0
   dart_jsonwebtoken: ^3.2.0
   drift: ^2.18.0
-  sqlite3_flutter_libs: ^0.5.22 # Para SQLite em nativo
-  sqlite3: ^2.4.0 # Para SQLite em Web (WASM)
+  uuid: ^4.4.0
+  sqlite3_flutter_libs: ^0.5.22
+  sqlite3: ^2.4.0
 
 dev_dependencies:
   drift_dev: ^2.18.0
