@@ -1,8 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
+
+/// Um modelo de dados para os itens coletados, garantindo type-safety.
+class CollectedItem {
+  const CollectedItem({
+    required this.name,
+    required this.code,
+    required this.quantity,
+  });
+  final String name;
+  final String code;
+  final int quantity;
+}
 
 class Coletor extends StatefulWidget {
   const Coletor({super.key});
@@ -14,32 +28,40 @@ class Coletor extends StatefulWidget {
 class _ColetorScreenState extends State<Coletor> {
   final _barcodeController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  late final _productRepository;
+  late final ProductRepository _productRepository;
+
+  Timer? _debounce;
 
   Product? _foundProduct;
-  final List<Map<String, dynamic>> _collectedItems = [];
+  final List<CollectedItem> _collectedItems = [];
 
   @override
   void initState() {
     super.initState();
     _productRepository = context.read<ProductRepository>();
-    // Adiciona um listener para buscar o produto enquanto o usuário digita
-    _barcodeController.addListener(() {
-      if (_barcodeController.text.isNotEmpty) {
-        _lookupBarcode(_barcodeController.text);
-      } else {
-        setState(() {
-          _foundProduct = null;
-        });
-      }
-    });
+    _barcodeController.addListener(_onBarcodeChanged);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _barcodeController.dispose();
     _quantityController.dispose();
     super.dispose();
+  }
+
+  /// Controla a busca por código de barras com um atraso (debounce) para
+  /// evitar múltiplas chamadas ao banco de dados enquanto o usuário digita.
+  void _onBarcodeChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      final barcode = _barcodeController.text;
+      if (barcode.isNotEmpty) {
+        _lookupBarcode(barcode);
+      } else if (mounted) {
+        setState(() => _foundProduct = null);
+      }
+    });
   }
 
   Future<void> _lookupBarcode(String barcode) async {
@@ -65,11 +87,6 @@ class _ColetorScreenState extends State<Coletor> {
       cameraFace: CameraFace.front,
     );
     return res;
-
-    /*
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Funcionalidade de scanner a ser implementada.')),
-    );*/
   }
 
   void _addItemToList() {
@@ -91,11 +108,11 @@ class _ColetorScreenState extends State<Coletor> {
     setState(() {
       _collectedItems.insert(
         0, // Adiciona o item no topo da lista para visualização imediata
-        {
-          'name': _foundProduct!.name,
-          'code': _foundProduct!.barcode,
-          'quantity': quantity,
-        },
+        CollectedItem(
+          name: _foundProduct!.name,
+          code: _foundProduct!.barcode,
+          quantity: quantity,
+        ),
       );
 
       // Limpa os campos para a próxima coleta
@@ -198,12 +215,12 @@ class _ColetorScreenState extends State<Coletor> {
                       itemBuilder: (context, index) {
                         final item = _collectedItems[index];
                         return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          margin: const EdgeInsets.symmetric(vertical: 5),
                           child: ListTile(
-                            title: Text(item['name'].toString()),
-                            subtitle: Text('Código: ${item['code']}'),
+                            title: Text(item.name),
+                            subtitle: Text('Código: ${item.code}'),
                             trailing: Text(
-                              'Qtd: ${item['quantity']}',
+                              'Qtd: ${item.quantity}',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
