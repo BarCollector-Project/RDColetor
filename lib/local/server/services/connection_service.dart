@@ -48,7 +48,7 @@ class ConnectionService with ChangeNotifier {
     if (!isConfigured || _hostname == null || _port == null) {
       throw ConnectionException('Servidor não configurado. Verifique as configurações de conexão.');
     }
-    return 'http://$_hostname:$_port';
+    return 'https://$_hostname:$_port';
   }
 
   // --- Initialization ---
@@ -83,7 +83,7 @@ class ConnectionService with ChangeNotifier {
 
     // Usamos um endpoint de "health check" da API. Se não tiver, pode ser só a base.
     // Baseado na sua API, um GET /products deve funcionar.
-    final testUrl = Uri.http('$address:$port', '/api/health');
+    final testUrl = Uri.https('$address:$port', '/api/health');
 
     try {
       // Usamos um timeout curto para não deixar o usuário esperando muito.
