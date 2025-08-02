@@ -126,6 +126,13 @@ class _SettingsState extends State<Settings> {
       body: ListView(
         children: [
           ListTile(
+            leading: const Icon(Icons.camera_enhance),
+            title: const Text('Seleção da câmera'),
+            subtitle: const Text('Selecione a melhor câmera para ler código de barras'),
+            onTap: () => Navigator.pushNamed(context, AppRoute.cameraSettings),
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.list_alt),
             title: const Text('Ver Produtos Cadastrados'),
             subtitle: const Text('Listar todos os produtos no banco de dados local'),

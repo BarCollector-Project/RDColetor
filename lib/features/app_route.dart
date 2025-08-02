@@ -4,6 +4,7 @@ import 'package:rdcoletor/features/home/view/home.dart';
 import 'package:rdcoletor/features/import/view/import_screen.dart';
 import 'package:rdcoletor/features/login/view/login.dart';
 import 'package:rdcoletor/features/products/view/products.dart';
+import 'package:rdcoletor/features/settings/view/camera_settings.dart';
 import 'package:rdcoletor/features/settings/view/settings.dart';
 import 'package:rdcoletor/features/admin/view/user_management_screen.dart';
 
@@ -15,6 +16,7 @@ class AppRoute {
   static const String products = "products";
   static const String settings = "settings";
   static const String userManagement = "user_management";
+  static const String cameraSettings = "camera_settings";
 
   static final Map<String, WidgetBuilder> routes = {
     login: (context) => const Login(),
@@ -24,5 +26,6 @@ class AppRoute {
     products: (context) => const Products(),
     settings: (context) => const Settings(),
     userManagement: (context) => const UserManagementScreen(),
+    cameraSettings: (context) => const CameraSettings(),
   };
 }

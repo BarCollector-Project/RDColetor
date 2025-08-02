@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:rdcoletor/features/app_route.dart';
+import 'package:rdcoletor/features/settings/global/app_settings.dart';
 import 'package:rdcoletor/features/setup/view/app_initializer.dart';
 import 'package:rdcoletor/features/setup/view/database_setup_wrapper.dart';
 
 /// Load screen
 /// Carregamento em segundo plano
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppSettings.init();
   // O AppInitializer se torna a raiz do aplicativo. Ele cuidará de mostrar
   // uma tela de loading e, em seguida, injetar os providers acima do MaterialApp.
   runApp(const AppInitializer());

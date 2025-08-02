@@ -459,9 +459,11 @@ packages:
   mobile_scanner:
     dependency: "direct main"
     description:
-      path: "lib/thirdparty_lib/mobile_scanner"
-      relative: true
-    source: path
+      path: "."
+      ref: develop
+      resolved-ref: "8b5b0fbe8ae42e48e652ff1e5135aefd7c507953"
+      url: "https://github.com/BarCollector-Project/mobile_scanner_extended.git"
+    source: git
     version: "7.0.1"
   nested:
     dependency: transitive
