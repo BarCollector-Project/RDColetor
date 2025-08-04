@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:rdcoletor/features/coletor/widgets/barcode_scanner.dart';
+import 'package:rdcoletor/features/settings/global/app_settings.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
 
@@ -52,10 +53,10 @@ class ColetorViewModel extends ChangeNotifier {
 class Coletor extends StatefulWidget {
   const Coletor({Key? key}) : super(key: key);
   @override
-  State<Coletor> createState() => _ColetorScreenState();
+  State<Coletor> createState() => _ColetorState();
 }
 
-class _ColetorScreenState extends State<Coletor> {
+class _ColetorState extends State<Coletor> {
   final _barcodeController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
   late final ColetorViewModel _viewModel;
@@ -63,6 +64,9 @@ class _ColetorScreenState extends State<Coletor> {
   Timer? _debounce;
   late final BarcodeScanner _scanner;
   bool _wait = false;
+  MobileScannerController cameraController = MobileScannerController(
+    cameraId: AppSettings.preferCameraId,
+  );
   @override
   void initState() {
     super.initState();
@@ -76,6 +80,7 @@ class _ColetorScreenState extends State<Coletor> {
     _barcodeController.dispose();
     _quantityController.dispose();
     _debounce?.cancel();
+    cameraController.dispose();
     super.dispose();
   }
 
@@ -95,18 +100,18 @@ class _ColetorScreenState extends State<Coletor> {
     );
   }
 
-  Future<void> _startScanner() async {
-    _wait = true;
-    setState(() => _showingScanner = true);
-
-    await _scanner.start();
-    _wait = false;
+  void _startScanner() {
+    setState(() {
+      _showingScanner = true;
+    });
+    cameraController.start();
   }
 
   void _stopScanner() {
-    _wait = true;
-    setState(() => _showingScanner = false);
-    _scanner.stop().then((value) => _wait = false);
+    setState(() {
+      _showingScanner = false;
+    });
+    cameraController.stop();
   }
 
   void _addItemToList() {
@@ -182,26 +187,37 @@ class _ColetorScreenState extends State<Coletor> {
                 children: [
                   Expanded(
                     child: Stack(
+                      alignment: Alignment.centerRight,
                       children: [
                         TextField(
                           enabled: !_showingScanner,
                           controller: _barcodeController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: 'Código de Barras',
-                            border: const OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.qr_code_scanner),
-                              onPressed: _showingScanner ? _stopScanner : _startScanner,
-                            ),
+                            border: OutlineInputBorder(),
                           ),
-                          keyboardType: TextInputType.text,
+                          keyboardType: TextInputType.number,
                         ),
                         if (_showingScanner)
-                          SizedBox(
-                            width: double.maxFinite,
-                            height: 100,
-                            child: _scanner,
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4.0),
+                              child: MobileScanner(
+                                controller: cameraController,
+                                onDetect: (capture) {
+                                  final barcode = capture.barcodes.firstOrNull;
+                                  if (barcode?.rawValue != null) {
+                                    _barcodeController.text = barcode!.rawValue!;
+                                    _stopScanner();
+                                  }
+                                },
+                              ),
+                            ),
                           ),
+                        IconButton(
+                          icon: Icon(_showingScanner ? Icons.close : Icons.barcode_reader),
+                          onPressed: _showingScanner ? _stopScanner : _startScanner,
+                        ),
                       ],
                     ),
                   ),

@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:rdcoletor/features/settings/global/app_settings.dart';
 
-import 'package:web/web.dart' hide Navigator, Text;
-
 class CameraSettings extends StatefulWidget {
   const CameraSettings({super.key});
 
@@ -14,7 +12,7 @@ class CameraSettings extends StatefulWidget {
 }
 
 class _CameraSettingsState extends State<CameraSettings> {
-  MobileScannerController? _scannerController;
+  late MobileScannerController _scannerController;
 
   List<CameraInfo> _cameras = [];
   String? _selectedCameraId;
@@ -25,64 +23,76 @@ class _CameraSettingsState extends State<CameraSettings> {
   @override
   void initState() {
     super.initState();
-    _initializeCameras();
+    // Inicializa com um controlador padrão. Ele será substituído em _initializeCameras.
+    _scannerController = MobileScannerController(
+      autoStart: false,
+    );
+    _initializeAndStartCamera();
   }
 
-  Future<void> setCamera([String? cameraId]) async {
+  /// Troca a câmera ativa, descartando o controlador antigo e criando um novo.
+  Future<void> _setCamera(String? cameraId) async {
     setState(() => _isLoading = true);
-    await Future.delayed(Duration.zero);
 
-    await _scannerController?.dispose();
-    _scannerController = null;
+    await Future<void>.delayed(Duration.zero);
+
+    await _scannerController.dispose();
 
     _scannerController = MobileScannerController(
       autoStart: false,
       cameraId: cameraId,
     );
 
-    setState(() {
-      _selectedCameraId = cameraId;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedCameraId = cameraId;
+        _isLoading = false;
+      });
+    }
 
-    await Future.delayed(Duration.zero);
-
-    await _scannerController?.start();
+    await Future<void>.delayed(Duration.zero);
+    await _scannerController.start();
   }
 
-  Future<void> _initializeCameras() async {
-    final camerasFromScanner = await MobileScannerController(autoStart: false).getAvailableCameras();
+  /// Busca as câmeras disponíveis e inicia a câmera preferida ou a primeira da lista.
+  Future<void> _initializeAndStartCamera() async {
+    _cameras = await MobileScannerController(autoStart: false).getAvailableCameras();
     final preferredId = AppSettings.preferCameraId;
+    String? initialCameraId;
 
-    debugPrint("preferredId: $preferredId");
-
-    _cameras = camerasFromScanner;
     // Se um ID preferido existe e está na lista, use-o.
     // Senão, use a primeira câmera da lista (geralmente a traseira).
     if (preferredId.isNotEmpty && _cameras.any((c) => c.cameraId == preferredId)) {
-      debugPrint("usando Camera preferida");
-      await setCamera(preferredId);
+      initialCameraId = preferredId;
     } else if (_cameras.isNotEmpty) {
-      debugPrint("usando primeira Camera detectada");
-      await setCamera(_cameras.first.cameraId);
+      initialCameraId = _cameras.first.cameraId;
     } else {
-      debugPrint("usando Camera detectada padrão");
-      _selectedCameraId = '';
-      await setCamera();
+      initialCameraId = null;
     }
+
+    // Descarta o controlador antigo e cria um novo com a câmera correta.
+    // O setState vai reconstruir o widget MobileScanner, que iniciará a câmera automaticamente.
+    await _scannerController.dispose();
+    setState(() {
+      _scannerController = MobileScannerController(cameraId: initialCameraId);
+      _selectedCameraId = initialCameraId;
+      _isLoading = false;
+    });
   }
 
   @override
-  Future<void> dispose() async {
-    console.log('dispose'.toJS);
+  void dispose() {
+    _scannerController.dispose();
     super.dispose();
-    await _scannerController?.dispose();
-    _scannerController = null;
   }
 
   void _saveAndExit() {
-    if (_selectedCameraId != null) {
-      final selectedCamera = _cameras.firstWhere((c) => c.cameraId == _selectedCameraId);
+    if (_selectedCameraId != null && _cameras.isNotEmpty) {
+      // Garante que a câmera selecionada ainda existe antes de salvar.
+      final selectedCamera = _cameras.firstWhere(
+        (c) => c.cameraId == _selectedCameraId,
+        orElse: () => _cameras.first,
+      );
       AppSettings.setPreferCamera(selectedCamera);
     }
     Navigator.of(context).pop();
@@ -132,8 +142,8 @@ class _CameraSettingsState extends State<CameraSettings> {
                         value: camera.cameraId,
                         groupValue: _selectedCameraId,
                         onChanged: (value) {
-                          if (value == null) return;
-                          setCamera(value);
+                          if (value == null || value == _selectedCameraId) return;
+                          _setCamera(value);
                         },
                       );
                     },
