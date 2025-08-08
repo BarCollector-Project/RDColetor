@@ -164,7 +164,7 @@ class _HomeState extends State<Home> {
                 ],
               ),
               //Somente o ADMIN terá acesso a sincronização do banco
-              if (authService.isAdmin) _buildSectionTitle("Banco de Dados"),
+              if (authService.isAdmin) _buildSectionTitle("Administração"),
               if (authService.isAdmin)
                 Wrap(
                   spacing: 16.0, // Espaçamento horizontal entre os botões.
@@ -173,8 +173,8 @@ class _HomeState extends State<Home> {
                   children: <Widget>[
                     _buildGridButton(
                       icon: Icons.cloud_upload,
-                      label: 'Importar Produtos',
-                      onTap: () => Navigator.pushNamed(context, AppRoute.import),
+                      label: 'Tela do administrador',
+                      onTap: () => Navigator.pushNamed(context, AppRoute.adminHome),
                     ), // Adicione mais botões conforme necessário
                   ],
                 ),
