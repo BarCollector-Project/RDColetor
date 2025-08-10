@@ -1,4 +1,10 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:rdcoletor/local/database_service.dart';
 
 class ExportScreen extends StatefulWidget {
   const ExportScreen({super.key});
@@ -8,19 +14,63 @@ class ExportScreen extends StatefulWidget {
 }
 
 class _ExportScreenState extends State<ExportScreen> {
+  late final DatabaseService _databaseService;
   bool _isLoading = false;
   String _statusMessage = 'Pressione para exportar os dados.';
 
   @override
   void initState() {
     super.initState();
+    _databaseService = context.read<DatabaseService>();
   }
 
-  Future<void> _exportData() async {
+  Future<bool> _sentToBackend(Uint8List fileBytes, String fileName) async {
+    try {
+      return await _databaseService.updateProdctsFromFile(fileBytes, fileName);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> _exportData({bool picker = false}) async {
     if (_isLoading) return;
 
     setState(() {
+      _statusMessage = 'Aguarde.';
       _isLoading = true;
+    });
+
+    if (picker) {
+      setState(() => _statusMessage = 'Selecione um arquivo .csv compatível.');
+
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+
+      if (picked == null) {
+        setState(() {
+          _statusMessage = 'Nenhum arquivo selecionado.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final fileBytes = picked.files.single.bytes!;
+      final fileName = picked.files.single.name;
+
+      setState(() => _statusMessage = "Tentando enviar dados...");
+
+      final result = await _sentToBackend(fileBytes, fileName);
+      setState(() {
+        _statusMessage = result ? 'Dados exportados com sucesso!' : 'Erro ao enviar para o backend.';
+        _isLoading = false;
+      });
+
+      return;
+    }
+
+    setState(() {
       _statusMessage = 'Exportando dados...';
     });
 
@@ -51,7 +101,7 @@ class _ExportScreenState extends State<ExportScreen> {
               const SizedBox(height: 20),
               if (_isLoading)
                 const CircularProgressIndicator()
-              else
+              else ...[
                 ElevatedButton.icon(
                   onPressed: _exportData,
                   icon: const Icon(Icons.file_upload),
@@ -60,6 +110,16 @@ class _ExportScreenState extends State<ExportScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
                 ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () => _exportData(picker: true),
+                  icon: const Icon(Icons.file_upload),
+                  label: const Text('Exportar com um arquivo'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Text(
                 _statusMessage,

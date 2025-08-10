@@ -21,7 +21,7 @@ class _AdminHomeState extends State<AdminHome> {
   void onTapSendCango() {
     Navigator.pushNamed(
       context,
-      AppRoute.import,
+      AppRoute.adminExport,
     );
   }
 

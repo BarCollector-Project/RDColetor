@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rdcoletor/features/admin/view/admin_home.dart';
 import 'package:rdcoletor/features/coletor/view/coleto.dart';
+import 'package:rdcoletor/features/export/view/export_screen.dart';
 import 'package:rdcoletor/features/home/view/home.dart';
 import 'package:rdcoletor/features/import/view/import_screen.dart';
 import 'package:rdcoletor/features/login/view/login.dart';
@@ -19,6 +20,7 @@ class AppRoute {
   static const String userManagement = "user_management";
   static const String cameraSettings = "camera_settings";
   static const String adminHome = "admin_home";
+  static const String adminExport = "admin_export";
 
   static final Map<String, WidgetBuilder> routes = {
     login: (context) => const Login(),
@@ -30,5 +32,6 @@ class AppRoute {
     userManagement: (context) => const UserManagementScreen(),
     cameraSettings: (context) => const CameraSettings(),
     adminHome: (context) => AdminHome(),
+    adminExport: (_) => ExportScreen(),
   };
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -6,6 +7,7 @@ import 'package:rdcoletor/local/auth/model/user.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
 import 'package:rdcoletor/local/drift_database.dart' show AppDb;
 import 'package:rdcoletor/local/server/services/connection_service.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
@@ -205,6 +207,38 @@ class DatabaseService {
       return Product.fromJson(json.decode(response.body) as Map<String, dynamic>);
     } else {
       throw Exception('Falha ao criar produto no servidor: ${response.statusCode}');
+    }
+  }
+
+  /// Enviar um arquivo CSV com os produtos para serem gravados/substituidos no banco de dados
+  ///
+  /// O [csv] deve ser um aquivo supotado
+  Future<bool> updateProdctsFromFile(Uint8List fileBytes, String fileName) async {
+    try {
+      final serverUrl = _connectionService.baseUrl;
+
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Usuário não autenticado. Faça o login novamente.');
+      }
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$serverUrl/admin/upload'),
+      );
+      request.headers['Authorization'] = 'Bearer $token';
+      debugPrint("Enviando o arquivo $fileName");
+      request.files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: fileName, contentType: MediaType('text', 'csv')));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
     }
   }
 

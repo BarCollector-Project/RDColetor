@@ -81,7 +81,7 @@ class BlocksLayout {
         final wrap = Wrap(
           spacing: 16.0, // Espaçamento horizontal entre os botões.
           runSpacing: 16.0, // Espaçamento vertical entre as linhas.
-          alignment: WrapAlignment.center, // Centraliza os botões.
+          alignment: WrapAlignment.start, // Centraliza os botões.
           children: wrapChildren,
         );
         processedChildren.add(wrap);
