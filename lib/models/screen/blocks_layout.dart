@@ -94,17 +94,15 @@ class BlocksLayout {
     return processedChildren;
   }
 
-  Widget buildScaffold({List<Widget> children = const []}) {
-    return Scaffold(
-      body: SizedBox(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          // Adiciona rolagem para evitar overflow em telas menores ou com muitos botões.
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: _build(children),
-          ),
+  Widget buildBody({List<Widget> children = const []}) {
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
+        // Adiciona rolagem para evitar overflow em telas menores ou com muitos botões.
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: _build(children),
         ),
       ),
     );

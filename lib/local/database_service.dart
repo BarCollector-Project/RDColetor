@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:rdcoletor/local/auth/model/user.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
+import 'package:rdcoletor/local/database/table/models/Register.dart';
 import 'package:rdcoletor/local/drift_database.dart' show AppDb;
 import 'package:rdcoletor/local/server/services/connection_service.dart';
 import 'package:http_parser/http_parser.dart';
@@ -241,6 +242,8 @@ class DatabaseService {
       return false;
     }
   }
+
+  Future<void> saveRegister(List<Register> register) async {}
 
   // ===========================================================================
   // PARTE 3: Lógica de Sincronização

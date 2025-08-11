@@ -33,15 +33,20 @@ class _AdminHomeState extends State<AdminHome> {
 
   @override
   Widget build(BuildContext context) {
-    return bLayout.buildScaffold(
-      children: [
-        bLayout.buildSectionTitle("Banco de dados"),
-        bLayout.buildGridButton(icon: Icons.cloud_upload, label: "Enviar carga", onTap: onTapSendCango),
-        bLayout.buildGridButton(icon: Icons.cloud_upload, label: "Modificar produtos", onTap: onTapModifyProducts),
-        bLayout.buildGridButton(icon: Icons.cloud_upload, label: "Gerenciar registros", onTap: onTapManagerRecords),
-        bLayout.buildSectionTitle("Usuários"),
-        bLayout.buildGridButton(icon: Icons.person, label: "Cadastros", onTap: onTapRegistrations),
-      ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Para administradores"),
+      ),
+      body: bLayout.buildBody(
+        children: [
+          bLayout.buildSectionTitle("Banco de dados"),
+          bLayout.buildGridButton(icon: Icons.cloud_upload, label: "Enviar carga", onTap: onTapSendCango),
+          bLayout.buildGridButton(icon: Icons.cloud_upload, label: "Modificar produtos", onTap: onTapModifyProducts),
+          bLayout.buildGridButton(icon: Icons.cloud_upload, label: "Gerenciar registros", onTap: onTapManagerRecords),
+          bLayout.buildSectionTitle("Usuários"),
+          bLayout.buildGridButton(icon: Icons.person, label: "Cadastros", onTap: onTapRegistrations),
+        ],
+      ),
     );
   }
 }
