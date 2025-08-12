@@ -3,22 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:rdcoletor/features/coletor/widgets/barcode_scanner.dart';
 import 'package:rdcoletor/features/settings/global/app_settings.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
-
-/// Um modelo de dados para os itens coletados, garantindo type-safety.
-class CollectedItem {
-  const CollectedItem({
-    required this.name,
-    required this.code,
-    required this.quantity,
-  });
-  final String name;
-  final String code;
-  final int quantity;
-}
+import 'package:rdcoletor/features/coletor/models/collect_register.dart';
 
 class ColetorViewModel extends ChangeNotifier {
   final ProductRepository productRepository;
@@ -51,22 +39,26 @@ class ColetorViewModel extends ChangeNotifier {
 }
 
 class Coletor extends StatefulWidget {
-  const Coletor({Key? key}) : super(key: key);
+  const Coletor({super.key});
   @override
   State<Coletor> createState() => _ColetorState();
 }
 
 class _ColetorState extends State<Coletor> {
+  // Indetificação da coleta
+  String reason = "INSUMO";
+  String origin = "LOJA";
+
   final _barcodeController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
   late final ColetorViewModel _viewModel;
   bool _showingScanner = false;
   Timer? _debounce;
-  late final BarcodeScanner _scanner;
-  bool _wait = false;
+
   MobileScannerController cameraController = MobileScannerController(
     cameraId: AppSettings.preferCameraId,
   );
+
   @override
   void initState() {
     super.initState();
@@ -91,14 +83,7 @@ class _ColetorState extends State<Coletor> {
     });
   }
 
-  void _setupScanner() {
-    _scanner = BarcodeScanner(
-      onDetect: (capture) => setState(() {
-        _barcodeController.text = capture.barcodes.firstOrNull?.rawValue ?? '';
-        _showingScanner = false;
-      }),
-    );
-  }
+  void _setupScanner() {}
 
   void _startScanner() {
     setState(() {
@@ -135,6 +120,8 @@ class _ColetorState extends State<Coletor> {
         name: _viewModel.foundProduct!.name,
         code: _viewModel.foundProduct!.barcode,
         quantity: quantity,
+        reason: reason,
+        origin: origin,
       ),
     );
 
@@ -142,6 +129,14 @@ class _ColetorState extends State<Coletor> {
     _barcodeController.clear();
     _quantityController.text = '1';
     FocusScope.of(context).unfocus();
+  }
+
+  void save() {
+    Navigator.pop(context, _viewModel.collectedItems);
+  }
+
+  void cancel() {
+    Navigator.pop(context);
   }
 
   @override

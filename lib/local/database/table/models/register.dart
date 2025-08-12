@@ -3,6 +3,10 @@ enum RegiterID {
 }
 
 abstract class Register {
-  RegiterID get id;
-  DateTime get timestamp;
+  final RegiterID id;
+  final DateTime timestamp;
+
+  Register({required this.id, required this.timestamp});
+
+  Map<String, dynamic> toJson();
 }

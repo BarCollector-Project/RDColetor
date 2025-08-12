@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:rdcoletor/local/auth/model/user.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
-import 'package:rdcoletor/local/database/table/models/Register.dart';
+import 'package:rdcoletor/local/database/table/models/register.dart';
 import 'package:rdcoletor/local/drift_database.dart' show AppDb;
 import 'package:rdcoletor/local/server/services/connection_service.dart';
 import 'package:http_parser/http_parser.dart';
@@ -243,7 +243,38 @@ class DatabaseService {
     }
   }
 
-  Future<void> saveRegister(List<Register> register) async {}
+  /// Guarda um novo registro no banco de dados
+  Future<void> saveRegister(List<Register> registers) async {
+    try {
+      if (registers.isEmpty) return;
+
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Usuário não autenticado. Faça o login novamente.');
+      }
+
+      final serverUrl = _connectionService.baseUrl;
+
+      final registersJson = jsonEncode(registers.map((r) => r.toJson()).toList());
+
+      final response = await http.post(
+        Uri.parse('$serverUrl/register'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: registersJson,
+      );
+
+      if (response.statusCode == HttpStatus.created) {
+      } else {
+        throw Exception('Falha ao salvar registro no servidor: HTTP Error ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Erro ao salvar registro no servidor: $e');
+      rethrow;
+    }
+  }
 
   // ===========================================================================
   // PARTE 3: Lógica de Sincronização
