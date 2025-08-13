@@ -163,6 +163,19 @@ class _HomeState extends State<Home> {
                   ),
                 ],
               ),
+              _buildSectionTitle("Registros"),
+              Wrap(
+                spacing: 16.0, // Espaçamento horizontal entre os botões.
+                runSpacing: 16.0, // Espaçamento vertical entre as linhas.
+                alignment: WrapAlignment.center, // Centraliza os botões.
+                children: <Widget>[
+                  _buildGridButton(
+                    icon: Icons.app_registration,
+                    label: "Coletas",
+                    onTap: () => Navigator.pushNamed(context, AppRoute.pickupHistory),
+                  ),
+                ],
+              ),
               //Somente o ADMIN terá acesso a sincronização do banco
               if (authService.isAdmin) _buildSectionTitle("Administração"),
               if (authService.isAdmin)

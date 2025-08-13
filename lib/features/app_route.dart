@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rdcoletor/features/admin/view/admin_home.dart';
-import 'package:rdcoletor/features/coletor/view/coleto.dart';
+import 'package:rdcoletor/features/coletor/view/collector_screen.dart';
+import 'package:rdcoletor/features/coletor/view/pickup_history_screen.dart';
 import 'package:rdcoletor/features/export/view/export_screen.dart';
 import 'package:rdcoletor/features/home/view/home.dart';
 import 'package:rdcoletor/features/import/view/import_screen.dart';
@@ -21,6 +22,7 @@ class AppRoute {
   static const String cameraSettings = "camera_settings";
   static const String adminHome = "admin_home";
   static const String adminExport = "admin_export";
+  static const String pickupHistory = "pickup_history";
 
   static final Map<String, WidgetBuilder> routes = {
     login: (context) => const Login(),
@@ -33,5 +35,6 @@ class AppRoute {
     cameraSettings: (context) => const CameraSettings(),
     adminHome: (context) => AdminHome(),
     adminExport: (_) => ExportScreen(),
+    pickupHistory: (_) => PickupHistoryScreen(),
   };
 }

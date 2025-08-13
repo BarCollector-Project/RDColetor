@@ -1,9 +1,12 @@
 import 'package:rdcoletor/local/database/table/models/register.dart';
 
 class CollectRegister extends Register {
+  final String financialNature;
+  final String costCenter;
+
   List<CollectedItem> coletedItens = [];
 
-  CollectRegister()
+  CollectRegister({required this.financialNature, required this.costCenter})
       : super(
           id: RegiterID.collect,
           timestamp: DateTime.now(),
