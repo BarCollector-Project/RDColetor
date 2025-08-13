@@ -1,13 +1,18 @@
+import 'package:rdcoletor/local/database/repositories/types/system_tables.dart';
 import 'package:rdcoletor/local/database/table/models/register.dart';
 
 class CollectRegister extends Register {
+  final String userName;
   final String financialNature;
   final String costCenter;
 
   List<CollectedItem> coletedItens = [];
 
-  CollectRegister({required this.financialNature, required this.costCenter})
-      : super(
+  CollectRegister({
+    required this.userName,
+    required this.financialNature,
+    required this.costCenter,
+  }) : super(
           id: RegiterID.collect,
           timestamp: DateTime.now(),
         );
@@ -16,6 +21,8 @@ class CollectRegister extends Register {
   Map<String, dynamic> toJson() {
     return {
       'id': id.name,
+      'financialNature': financialNature,
+      'costCenter': costCenter,
       'timestamp': timestamp.toIso8601String(),
       'coletedItens': coletedItens.map((item) => item.toJson()).toList(),
     };
@@ -33,8 +40,8 @@ class CollectedItem {
   final String name;
   final String code;
   final int quantity;
-  final String reason;
-  final String origin;
+  final Reason reason;
+  final Origin origin;
 
   Map<String, dynamic> toJson() {
     return {

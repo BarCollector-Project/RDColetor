@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/auth/service/auth_service.dart';
 import 'package:rdcoletor/local/database_service.dart';
+import 'package:rdcoletor/local/server/services/connection_service.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -28,6 +29,12 @@ class _LoginState extends State<Login> {
     super.initState();
 
     _doLogoutObserver();
+  }
+
+  /// Chama-se para editar as configurações de enderço do servidor setadas
+  Future<void> _doReconfiguration() async {
+    final connection = context.read<ConnectionService>();
+    await connection.clearConnectionInfo();
   }
 
   /// Aguarda até que o usuário faça logout para que o database local seja fechado
@@ -118,101 +125,114 @@ class _LoginState extends State<Login> {
     return Scaffold(
       // Um fundo cinza claro para destacar o card de login
       backgroundColor: Colors.grey[200],
-      body: Center(
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            // Uma sombra sutil para dar profundidade
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.5),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
+      body: Stack(
+        children: [
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                // Uma sombra sutil para dar profundidade
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withAlpha(128),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-            ],
-          ),
-          width: 300,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              // Impede a coluna de expandir verticalmente
-              mainAxisSize: MainAxisSize.min,
-              // Faz com que os filhos (como o botão) estiquem para preencher a largura
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // --- Este é o Text para o título ---
-                const Text(
-                  'RD Coletor',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Usuário',
-                    border: const OutlineInputBorder(),
-                  ),
-                  controller: _userController,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  obscureText: true, // Para esconder a senha
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    border: const OutlineInputBorder(),
-                  ),
-                  controller: _passwordController,
-                  onSubmitted: (_) => _doLogin(),
-                ),
-                SizedBox(
-                  height: 24,
-                ),
-                SizedBox(
-                  height: 50,
-                  child: Stack(
-                    alignment: Alignment.center,
-
-                    children: [
-                      if (_isLoading)
-                        Positioned(
-                          bottom: 0,
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: LinearProgressIndicator(borderRadius: BorderRadius.circular(100)),
-                        ),
-                      Positioned(
-                        bottom: 0,
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(50),
-                            padding: EdgeInsets.all(0),
-                            backgroundColor: _isLoading ? Colors.transparent : null,
-                            shadowColor: _isLoading ? Colors.transparent : null,
-                          ),
-                          onPressed: _isLoading ? null : () => _doLogin(),
-                          child: Text(
-                            "Entrar",
-                            style: TextStyle(color: _isLoading ? Colors.white : null),
-                          ),
-                        ),
+              width: 300,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  // Impede a coluna de expandir verticalmente
+                  mainAxisSize: MainAxisSize.min,
+                  // Faz com que os filhos (como o botão) estiquem para preencher a largura
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // --- Este é o Text para o título ---
+                    const Text(
+                      'RD Coletor',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Usuário',
+                        border: const OutlineInputBorder(),
+                      ),
+                      controller: _userController,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      obscureText: true, // Para esconder a senha
+                      decoration: InputDecoration(
+                        labelText: 'Senha',
+                        border: const OutlineInputBorder(),
+                      ),
+                      controller: _passwordController,
+                      onSubmitted: (_) => _doLogin(),
+                    ),
+                    const SizedBox(
+                      height: 24,
+                    ),
+                    SizedBox(
+                      height: 50,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (_isLoading)
+                            Positioned.fill(
+                              child: LinearProgressIndicator(borderRadius: BorderRadius.circular(100)),
+                            ),
+                          Positioned.fill(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(50),
+                                padding: const EdgeInsets.all(0),
+                                backgroundColor: _isLoading ? Colors.transparent : null,
+                                shadowColor: _isLoading ? Colors.transparent : null,
+                              ),
+                              onPressed: _isLoading ? null : () => _doLogin(),
+                              child: Text(
+                                "Entrar",
+                                style: TextStyle(color: _isLoading ? Colors.white : null),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            right: 24,
+            bottom: 24,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                iconColor: Colors.white,
+                padding: EdgeInsets.all(8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                minimumSize: Size.square(60),
+                iconSize: 24,
+              ),
+              onPressed: _doReconfiguration,
+              child: const Icon(Icons.exit_to_app_sharp),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -41,6 +41,9 @@ class _ExportScreenState extends State<ExportScreen> {
     });
 
     if (picker) {
+      //TODO: Mudar o arquivo: O CSV não contém todos os código de barras.
+      // Será usado o XML exportado pelo SGLinear em:
+      // Relatorios > Materiais > Produtos > Tipo de documento: Todos os código de barras.
       setState(() => _statusMessage = 'Selecione um arquivo .csv compatível.');
 
       final picked = await FilePicker.platform.pickFiles(

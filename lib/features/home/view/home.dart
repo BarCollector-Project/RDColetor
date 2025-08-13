@@ -159,7 +159,7 @@ class _HomeState extends State<Home> {
                   _buildGridButton(
                     icon: Icons.qr_code_scanner,
                     label: 'Coletar Dados',
-                    onTap: () => Navigator.pushNamed(context, AppRoute.coletor),
+                    onTap: () => Navigator.pushNamed(context, AppRoute.collect),
                   ),
                 ],
               ),

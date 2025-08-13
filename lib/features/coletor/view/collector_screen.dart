@@ -7,14 +7,17 @@ import 'package:rdcoletor/features/settings/global/app_settings.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
 import 'package:rdcoletor/features/coletor/models/collect_register.dart';
+import 'package:rdcoletor/local/database/repositories/types/system_tables.dart';
 
 class ColetorViewModel extends ChangeNotifier {
   final ProductRepository productRepository;
   Product? foundProduct;
-  List<CollectedItem> collectedItems = [];
+  List<CollectedItem> collectedItems;
   bool isWaiting = false;
 
-  ColetorViewModel({required this.productRepository});
+  /// Forneça [collectedItems] caso for editar um registro
+  /// Do contrário, será criado um novo vazio
+  ColetorViewModel({required this.productRepository, this.collectedItems = const []});
 
   Future<void> findProduct(String barcode) async {
     isWaiting = true;
@@ -38,16 +41,22 @@ class ColetorViewModel extends ChangeNotifier {
   }
 }
 
-class Coletor extends StatefulWidget {
-  const Coletor({super.key});
+/// Cria uma nova tela para coletagem de produtos
+/// Retornar uma [List<CollectedItem>] caso não seja fornecido um e for usado um botão "Salvar".
+/// Retornar [true] caso [List<CollectedItem>] for fornecido e o botão "Salvar" for usado
+/// Retorna [null] (Comportamento padrão) caso o usuário toque em "Cancelar".
+class CollectScreen extends StatefulWidget {
+  final List<CollectedItem>? registerCollectedItems;
+  const CollectScreen({super.key, this.registerCollectedItems});
+
   @override
-  State<Coletor> createState() => _ColetorState();
+  State<CollectScreen> createState() => _CollectScreenState();
 }
 
-class _ColetorState extends State<Coletor> {
+class _CollectScreenState extends State<CollectScreen> {
   // Indetificação da coleta
-  String reason = "INSUMO";
-  String origin = "LOJA";
+  Reason? reason;
+  Origin? origin;
 
   final _barcodeController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
@@ -62,7 +71,10 @@ class _ColetorState extends State<Coletor> {
   @override
   void initState() {
     super.initState();
-    _viewModel = ColetorViewModel(productRepository: context.read<ProductRepository>());
+    _viewModel = ColetorViewModel(
+      productRepository: context.read<ProductRepository>(),
+      collectedItems: widget.registerCollectedItems ?? [],
+    );
     _barcodeController.addListener(_onBarcodeChanged);
     _setupScanner();
   }
@@ -115,13 +127,20 @@ class _ColetorState extends State<Coletor> {
       return;
     }
 
+    if (reason == null || origin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, selecione a origem e o motivo da coleta.')),
+      );
+      return;
+    }
+
     _viewModel.addItem(
       CollectedItem(
         name: _viewModel.foundProduct!.name,
         code: _viewModel.foundProduct!.barcode,
         quantity: quantity,
-        reason: reason,
-        origin: origin,
+        reason: reason!,
+        origin: origin!,
       ),
     );
 
@@ -132,7 +151,10 @@ class _ColetorState extends State<Coletor> {
   }
 
   void save() {
-    Navigator.pop(context, _viewModel.collectedItems);
+    Navigator.pop(
+      context,
+      widget.registerCollectedItems != null ? _viewModel.collectedItems : true,
+    );
   }
 
   void cancel() {
@@ -161,15 +183,17 @@ class _ColetorState extends State<Coletor> {
                 child: Center(
                   child: Consumer<ColetorViewModel>(
                     builder: (context, viewModel, _) {
-                      return Text(
-                        viewModel.foundProduct?.name ?? 'Digite ou escaneie um código',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: viewModel.foundProduct != null ? Colors.black87 : Colors.grey,
-                        ),
-                        textAlign: TextAlign.center,
-                      );
+                      return _viewModel.isWaiting
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              viewModel.foundProduct?.name ?? 'Digite ou escaneie um código',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: viewModel.foundProduct != null ? Colors.black87 : Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            );
                     },
                   ),
                 ),
@@ -272,6 +296,23 @@ class _ColetorState extends State<Coletor> {
                           );
                   },
                 ),
+              ),
+              const Divider(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: save,
+                      child: const Text('Salvar'),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: cancel,
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

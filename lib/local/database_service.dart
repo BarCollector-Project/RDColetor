@@ -10,6 +10,7 @@ import 'package:rdcoletor/local/drift_database.dart' show AppDb;
 import 'package:rdcoletor/local/server/services/connection_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:http_parser/src/media_type.dart' show MediaType;
 
 /// Serviço central para gerenciar o banco de dados local e a comunicação com o servidor.
 class DatabaseService {

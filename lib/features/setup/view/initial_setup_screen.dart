@@ -77,7 +77,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               Text(_statusMessage, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: Colors.black54)),
               const SizedBox(height: 24),
               TextField(
-                controller: _serverAddressController..text = "192.168.1.98",
+                controller: _serverAddressController..text = "barcollector.local",
                 decoration: InputDecoration(
                   labelText: 'Endereço do Servidor (IP ou domínio)',
                   border: const OutlineInputBorder(),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rdcoletor/features/admin/view/admin_home.dart';
+import 'package:rdcoletor/features/coletor/models/collect_register.dart';
 import 'package:rdcoletor/features/coletor/view/collector_screen.dart';
 import 'package:rdcoletor/features/coletor/view/pickup_history_screen.dart';
 import 'package:rdcoletor/features/export/view/export_screen.dart';
@@ -15,7 +16,7 @@ class AppRoute {
   static const String login = "login";
   static const String home = "home";
   static const String import = "import";
-  static const String coletor = "coletor";
+  static const String collect = "collect";
   static const String products = "products";
   static const String settings = "settings";
   static const String userManagement = "user_management";
@@ -28,7 +29,11 @@ class AppRoute {
     login: (context) => const Login(),
     home: (context) => const Home(),
     import: (context) => const ImportScreen(),
-    coletor: (context) => const Coletor(),
+    collect: (context) {
+      return CollectScreen(
+        registerCollectedItems: ModalRoute.of(context)?.settings.arguments as List<CollectedItem>?,
+      );
+    },
     products: (context) => const Products(),
     settings: (context) => const Settings(),
     userManagement: (context) => const UserManagementScreen(),
