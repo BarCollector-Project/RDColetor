@@ -27,6 +27,12 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.22
   sqlite3: ^2.4.0
   simple_barcode_scanner: ^0.3.0
+  barcollector_sdk:
+    git:
+      url: git@github.com:BarCollector-Project/BarCollector-Server.git
+      ref: main
+      path: SDK
+
 
 dev_dependencies:
   drift_dev: ^2.18.0

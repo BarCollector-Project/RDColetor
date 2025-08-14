@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:barcollector_sdk/front/api_endpoints.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:rdcoletor/local/auth/model/user.dart';
@@ -47,6 +48,15 @@ class DatabaseService {
     } catch (e) {
       debugPrint("Erro ao fechar o banco de dados: $e");
       return false;
+    }
+  }
+  // ===========================================================================
+  //                                Registros
+  // ===========================================================================
+
+  Future<void> sentRegister(Register register) async {
+    try {} catch (e) {
+      debugPrint("Erro ao enviar registro: $e");
     }
   }
 
@@ -130,10 +140,11 @@ class DatabaseService {
 
   /// Busca pelo [username] e valida o [password] forneceidos
   Future<User?> _fetchUserFromServer(String username, String password) async {
-    final serverUrl = _connectionService.baseUrl;
+    final String serverUrl = _connectionService.baseUrl;
+    final String loginApi = serverUrl + APIEndpoints.login;
 
     final response = await http.post(
-      Uri.parse('$serverUrl/login'),
+      Uri.parse(loginApi),
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
       body: jsonEncode({'username': username, 'password': password}),
     );
