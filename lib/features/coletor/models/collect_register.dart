@@ -27,6 +27,15 @@ class CollectRegister extends Register {
       'coletedItens': coletedItens.map((item) => item.toJson()).toList(),
     };
   }
+
+  @override
+  CollectRegister fromJson(Map<String, dynamic> json) {
+    return CollectRegister(
+      userName: json['userName'],
+      financialNature: json['financialNature'],
+      costCenter: json['costCenter'],
+    );
+  }
 }
 
 class CollectedItem {

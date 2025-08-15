@@ -55,13 +55,88 @@ class DatabaseService {
   // ===========================================================================
 
   Future<void> sentRegister(Register register) async {
-    try {} catch (e) {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception("Usuário não autenticado. Faça o login novamente.");
+      }
+
+      final api = _connectionService.baseUrl + APIEndpoints.register;
+      final response = await http.post(
+        Uri.parse(api),
+        body: register.toJson(),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+      );
+      if (response.statusCode != 201) {
+        throw Exception("Falha ao enviar registro: ${response.statusCode}");
+      } else {
+        debugPrint("Registro enviado com sucesso!");
+      }
+    } catch (e) {
       debugPrint("Erro ao enviar registro: $e");
     }
   }
 
+  /// Guarda um novo registro no banco de dados
+  Future<void> sentRegisters(List<Register> registers) async {
+    try {
+      if (registers.isEmpty) return;
+
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Usuário não autenticado. Faça o login novamente.');
+      }
+
+      final api = _connectionService.baseUrl + APIEndpoints.register;
+
+      final registersJson = jsonEncode(registers.map((r) => r.toJson()).toList());
+
+      final response = await http.post(
+        Uri.parse(api),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: registersJson,
+      );
+
+      if (response.statusCode == HttpStatus.created) {
+      } else {
+        throw Exception('Falha ao salvar registro no servidor: HTTP Error ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Erro ao salvar registro no servidor: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<T>> getRegisters<T extends Register>(T Function(Map<String, dynamic>) fromJson) async {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Usuário não autenticado. Faça o login novamente.');
+      }
+
+      final api = _connectionService.baseUrl + APIEndpoints.register;
+      final response = await http.get(
+        Uri.parse(api),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == HttpStatus.ok) {
+        final List<dynamic> registersJson = json.decode(response.body);
+        return registersJson.map<T>((json) => fromJson(json as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception('Falha ao buscar registros do servidor: HTTP Error ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint("Erro ao buscar registros: $e");
+    }
+    return [];
+  }
+
   // ===========================================================================
-  //                  Operações do Banco de Dados Local (Drift)
+//                                 Produtos
   // ===========================================================================
 
   // --- Product Operations ---
@@ -254,45 +329,11 @@ class DatabaseService {
     }
   }
 
-  /// Guarda um novo registro no banco de dados
-  Future<void> saveRegister(List<Register> registers) async {
-    try {
-      if (registers.isEmpty) return;
-
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('Usuário não autenticado. Faça o login novamente.');
-      }
-
-      final serverUrl = _connectionService.baseUrl;
-
-      final registersJson = jsonEncode(registers.map((r) => r.toJson()).toList());
-
-      final response = await http.post(
-        Uri.parse('$serverUrl/register'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: registersJson,
-      );
-
-      if (response.statusCode == HttpStatus.created) {
-      } else {
-        throw Exception('Falha ao salvar registro no servidor: HTTP Error ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Erro ao salvar registro no servidor: $e');
-      rethrow;
-    }
-  }
-
   // ===========================================================================
   // PARTE 3: Lógica de Sincronização
   // ===========================================================================
 
-  /// Orquestra a sincronização: busca dados do servidor e os salva localmente.
-  /// Este é o método que você chamaria para atualizar os dados do app.
+  /// Sincroniza os produtos do backend com o database local.
   Future<void> syncProductsFromServer() async {
     try {
       debugPrint('Iniciando sincronização de produtos...');
