@@ -154,12 +154,17 @@ class _HomeState extends State<Home> {
                   _buildGridButton(
                     icon: Icons.list_alt,
                     label: 'Consultar produtos',
-                    onTap: () => Navigator.pushNamed(context, AppRoute.products),
+                    onTap: () => Navigator.pushNamed(context, AppRoute.productDetails),
                   ),
                   _buildGridButton(
                     icon: Icons.qr_code_scanner,
                     label: 'Coletar Dados',
                     onTap: () => Navigator.pushNamed(context, AppRoute.collect),
+                  ),
+                  _buildGridButton(
+                    icon: Icons.shopping_bag,
+                    label: 'Sugestão de compra',
+                    onTap: () => Navigator.pushNamed(context, AppRoute.orderSuggestion),
                   ),
                 ],
               ),

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:barcollector_sdk/barcollector_sdk.dart';
 import 'package:barcollector_sdk/front/api_endpoints.dart';
+import 'package:barcollector_sdk/types/product/product_model.dart';
+import 'package:barcollector_sdk/routes/product/product_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:rdcoletor/local/auth/model/user.dart';
@@ -50,9 +53,24 @@ class DatabaseService {
       return false;
     }
   }
+
+  Map<String, String> _tokenHeader(String token) {
+    return {
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  //) {}
+
   // ===========================================================================
   //                                Registros
   // ===========================================================================
+
+  Future<List<Map<String, dynamic>>> getSuppliers() async {
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> getSupplierById(int id) async {}
 
   Future<void> sentRegister(Register register) async {
     try {
@@ -136,24 +154,86 @@ class DatabaseService {
   }
 
   // ===========================================================================
-//                                 Produtos
+  //                                 Produtos
   // ===========================================================================
 
   // --- Product Operations ---
 
   /// Busca todos os produtos salvos no banco de dados local.
-  Future<List<Product>> getAllProducts() async {
-    // A chamada agora é type-safe e muito mais simples!
-    return (await _db.select(_db.products).get()).map((data) => Product.fromDrift(data)).toList();
+  Future<List<Map<String, dynamic>>> getProducts({required int offset, required int limit}) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      //TODO: não implementado
+      //throw Exception('Usuário não autenticado. Faça o login novamente.');
+    }
+
+    final api = _connectionService.baseUrl + APIEndpoints.products;
+
+    final result = await http.get(Uri.parse(api), headers: _tokenHeader('$token'));
+    if (result.statusCode != 200) {
+      return [];
+    }
+
+    return jsonDecode(result.body);
   }
 
-  /// Busca um produto específico pelo código de barras no banco local.
-  Future<Product?> getProductByBarcode(String barcode) async {
-    final product = await (_db.select(_db.products)..where((tbl) => tbl.barcode.equals(barcode))).getSingleOrNull();
-    if (product != null) {
-      return Product.fromDrift(product);
+  /// Busca um produto específico pelo código de barras no banco de dados
+  Future<Map<String, dynamic>?> getProductByBarcode(String barcode) async {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        //TODO: não implementado
+        //throw Exception('Usuário não autenticado. Faça o login novamente.');
+      }
+
+      final api = '${_connectionService.baseUrl}${APIEndpoints.products}/barcode/$barcode';
+      final result = await http.get(Uri.parse(api), headers: _tokenHeader('$token'));
+      if (result.statusCode != 200) {
+        return null;
+      }
+
+      return jsonDecode(result.body);
+    } catch (e) {
+      throw Exception(e is http.ClientException ? 'Falha ao se conectar ao servidor. Contate o administrador' : 'Ocorreu um erro ao solicitar o produto');
     }
-    return null;
+  }
+
+  /// Busca produtos no servidor por um termo de pesquisa.
+  Future<List<Map<String, dynamic>>> searchProducts({required String query}) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      //TODO: não implementado
+      //throw Exception('Usuário não autenticado. Faça o login novamente.');
+    }
+
+    final uri = Uri.parse(
+      '${_connectionService.baseUrl}${APIEndpoints.products}',
+    ).replace(queryParameters: {'query': query});
+    try {
+      final result = await http.get(uri, headers: _tokenHeader('$token'));
+
+      if (result.statusCode != 200) {
+        return [];
+      }
+
+      return List<Map<String, dynamic>>.from(jsonDecode(result.body));
+    } catch (e) {
+      throw Exception(e is http.ClientException ? 'Falha ao se conectar ao servidor. Contate o administrador' : 'Ocorreu um erro ao solicitar o produto');
+    }
+  }
+
+  Future<Map<String, dynamic>> getProductDetails(int id, List<Includes> include) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      //TODO: não implementado
+    }
+    final api = '${_connectionService.baseUrl}${ProductRoute.productById(id: id, include: include)}';
+    final response = await http.get(Uri.parse(api), headers: _tokenHeader('$token'));
+    if (response.statusCode != 200) {
+      return throw Exception('Erro no servidor: ${response.statusCode}');
+    }
+    final body = response.body;
+    return json.decode(body);
   }
 
   /// Insere ou atualiza um produto no banco de dados local.

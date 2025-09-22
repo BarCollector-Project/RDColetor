@@ -1,3 +1,5 @@
+import 'package:barcollector_sdk/routes/product/parameters/include.dart';
+import 'package:barcollector_sdk/types/product/product_model.dart';
 import 'package:rdcoletor/local/coletor/model/product.dart';
 import 'package:rdcoletor/local/database_service.dart';
 
@@ -17,18 +19,39 @@ class ProductRepository {
     }
   }
 
-  // Busca um produto pelo código.
-  // Retorna um objeto Product ou null se não encontrar.
-  Future<Product?> findProductByCode(String code) async {
+  /// Busca um produto pelo código.
+  /// Retorna um objeto Product ou null se não encontrar.
+  /// Possível [Exception]
+  Future<ProductModel?> findProductByCode(String code) async {
     String searchCode = code.padLeft(_kBarcodeMinLength, '0');
 
     final product = await _dbService.getProductByBarcode(searchCode);
-
-    return product;
+    if (product != null) {
+      return ProductModel.fromMap(product);
+    }
+    return null;
   }
 
   // Busca todos os produtos no banco de dados.
-  Future<List<Product>> getAllProducts() async {
-    return await _dbService.getAllProducts();
+  Future<List<ProductModel>> getProducts({int offset = 0, int limit = 50}) async {
+    final results = await _dbService.getProducts(offset: offset, limit: limit);
+    if (results.isNotEmpty) {
+      return results.map(ProductModel.fromMap).toList();
+    }
+    return [];
+  }
+
+  // Busca produtos por nome ou código no servidor.
+  Future<List<ProductModel>> searchProducts({required String query}) async {
+    final results = await _dbService.searchProducts(query: query);
+    if (results.isNotEmpty) {
+      return results.map(ProductModel.fromMap).toList();
+    }
+    return [];
+  }
+
+  Future<ProductModel> getProductDetails(int id, List<Includes> include) async {
+    final product = await _dbService.getProductDetails(id, include);
+    return ProductModel.fromMap(product);
   }
 }

@@ -1,17 +1,17 @@
 import 'dart:async';
 
+import 'package:barcollector_sdk/types/product/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:rdcoletor/features/settings/global/app_settings.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
-import 'package:rdcoletor/local/coletor/model/product.dart';
 import 'package:rdcoletor/features/coletor/models/collect_register.dart';
 import 'package:rdcoletor/local/database/repositories/types/system_tables.dart';
 
 class ColetorViewModel extends ChangeNotifier {
   final ProductRepository productRepository;
-  Product? foundProduct;
+  ProductModel? foundProduct;
   List<CollectedItem> collectedItems;
   bool isWaiting = false;
 

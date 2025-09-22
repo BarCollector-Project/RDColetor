@@ -46,10 +46,10 @@ packages:
     description:
       path: SDK
       ref: main
-      resolved-ref: "45b1b37614f538e10a7b6ff1637d4d73854c648a"
+      resolved-ref: "397461f3202314b0c81f1a0e04e1435211fe270f"
       url: "git@github.com:BarCollector-Project/BarCollector-Server.git"
     source: git
-    version: "1.0.0"
+    version: "1.0.1"
   boolean_selector:
     dependency: transitive
     description:

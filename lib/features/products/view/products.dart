@@ -1,3 +1,4 @@
+import 'package:barcollector_sdk/types/product/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
@@ -14,9 +15,9 @@ class _ProductsState extends State<Products> {
   late final ProductRepository _productRepository;
   final TextEditingController _searchController = TextEditingController();
 
-  late Future<List<Product>> _productsFuture;
-  List<Product> _allProducts = [];
-  List<Product> _filteredProducts = [];
+  late Future<List<ProductModel>> _productsFuture;
+  List<ProductModel> _allProducts = [];
+  List<ProductModel> _filteredProducts = [];
 
   @override
   void initState() {
@@ -32,8 +33,8 @@ class _ProductsState extends State<Products> {
     super.dispose();
   }
 
-  Future<List<Product>> _loadProducts() async {
-    final products = await _productRepository.getAllProducts();
+  Future<List<ProductModel>> _loadProducts() async {
+    final products = await _productRepository.getProducts();
     setState(() {
       _allProducts = products;
       _filteredProducts = products;
@@ -72,7 +73,7 @@ class _ProductsState extends State<Products> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Product>>(
+            child: FutureBuilder<List<ProductModel>>(
               future: _productsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -94,7 +95,7 @@ class _ProductsState extends State<Products> {
                     return ListTile(
                       title: Text(product.name),
                       subtitle: Text('Código: ${product.barcode}'),
-                      trailing: Text('R\$ ${product.price.toStringAsFixed(2)}'),
+                      trailing: Text('R\$ ${product.price?.toStringAsFixed(2)}'),
                     );
                   },
                 );
