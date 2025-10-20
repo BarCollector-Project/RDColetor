@@ -2,7 +2,6 @@ import 'package:barcollector_sdk/types/product/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rdcoletor/local/coletor/db/repository/product_repository.dart';
-import 'package:rdcoletor/local/coletor/model/product.dart';
 
 class Products extends StatefulWidget {
   const Products({super.key});

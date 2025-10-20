@@ -27,7 +27,7 @@ class _SearchProductViewState extends State<SearchProductView> {
   final _searchController = TextEditingController();
   final _debounce = _Debounce(const Duration(milliseconds: 500));
 
-  String _searchError = '';
+  String? _searchError;
 
   // Estado do widget
   bool _isLoading = false;
@@ -68,7 +68,7 @@ class _SearchProductViewState extends State<SearchProductView> {
         final products = await repository.searchProducts(query: query);
         if (mounted) {
           setState(() {
-            _searchError = '';
+            _searchError = null;
             _foundProducts = products;
             _isLoading = false;
           });
@@ -112,7 +112,7 @@ class _SearchProductViewState extends State<SearchProductView> {
             padding: EdgeInsets.all(16.0),
             child: Center(
               child: Text(
-                _searchError.isEmpty ? 'Nenhum produto encontrado.' : _searchError,
+                _searchError ?? 'Nenhum produto encontrado.',
               ),
             ),
           )

@@ -2,9 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:barcollector_sdk/barcollector_sdk.dart';
-import 'package:barcollector_sdk/front/api_endpoints.dart';
-import 'package:barcollector_sdk/types/product/product_model.dart';
-import 'package:barcollector_sdk/routes/product/product_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:rdcoletor/local/auth/model/user.dart';
@@ -20,6 +17,7 @@ import 'package:http_parser/src/media_type.dart' show MediaType;
 class DatabaseService {
   // A instância do banco de dados Drift, que funciona em todas as plataformas.
   late final AppDb _db;
+
   final ConnectionService _connectionService = ConnectionService();
 
   DatabaseService() {
@@ -60,7 +58,163 @@ class DatabaseService {
     };
   }
 
-  //) {}
+  // Order suggestion
+  Future<List<dynamic>> getOrderSuggestionList({int days = 7}) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      // TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}/suggestions';
+    final result = await http.get(
+      Uri.parse(api).replace(
+        queryParameters: {'days': days.toString()},
+      ),
+      headers: _tokenHeader('$token'),
+    );
+
+    if (result.statusCode != 200) {
+      return [];
+    }
+
+    return jsonDecode(result.body) as List<dynamic>;
+  }
+
+  Future<int> markSuggestion({required int orderId, required int numPed}) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      // TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}/suggestions';
+    final result = await http.post(
+      Uri.parse(api),
+      headers: _tokenHeader('$token'),
+      body: jsonEncode({
+        'orderId': orderId,
+        'numPed': numPed,
+      }),
+    );
+
+    if (result.statusCode != 200) {
+      return -2;
+    }
+    return 0;
+  }
+
+  Future<Map<String, dynamic>> getOrderSuggestion(int orderId) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      // TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}/suggestions';
+    final result = await http.get(
+      Uri.parse(api).replace(
+        queryParameters: {'id': orderId.toString()},
+      ),
+      headers: _tokenHeader('$token'),
+    );
+    if (result.statusCode != 200) {
+      return {};
+    }
+    return jsonDecode(result.body);
+  }
+
+  /// Retornos:
+  /// 0 - OK
+  /// -1 - Conflito
+  /// -2 - Falha
+  Future<int> putProductSuggestion({
+    required int orderId,
+    required int companyId,
+    required String timestampIso8601,
+    required int productId,
+    required double quantity,
+    required String status,
+    bool replace = false,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      // TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}/suggestions';
+    final result = await http.put(
+      Uri.parse(api),
+      headers: _tokenHeader('$token'),
+      body: jsonEncode({
+        'orderId': orderId,
+        'companyId': companyId,
+        'timestamp': timestampIso8601,
+        'productId': productId,
+        'quantity': quantity,
+        'status': status,
+        'replace': replace,
+      }),
+    );
+    if (result.statusCode == HttpStatus.conflict) {
+      return -1;
+    } else if (result.statusCode != HttpStatus.ok) {
+      return -2;
+    }
+    return 0;
+  }
+
+  /// Retornos:
+  /// 0 - OK
+  /// -2 - Falha
+  /// -3 - Inexistente
+  Future<int> removeProductSuggestion({
+    required int orderId,
+    required int companyId,
+    required String timestampIso8601,
+    required int productId,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      // TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}/suggestions';
+    final result = await http.delete(
+      Uri.parse(api),
+      headers: _tokenHeader('$token'),
+      body: jsonEncode({
+        'orderId': orderId,
+        'companyId': companyId,
+        'timestamp': timestampIso8601,
+        'productId': productId,
+      }),
+    );
+    if (result.statusCode == HttpStatus.notAcceptable) {
+      return -3;
+    } else if (result.statusCode != HttpStatus.ok) {
+      return -2;
+    }
+    return 0;
+  }
+
+  Future<int> putNewOrderSuggestion({
+    required int companyId,
+    required int productId,
+    required double quantity,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      // TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}/suggestions';
+    final result = await http.post(
+      Uri.parse(api),
+      headers: _tokenHeader('$token'),
+      body: jsonEncode(
+        {
+          'companyId': companyId,
+          'productId': productId,
+          'quantity': quantity,
+        },
+      ),
+    );
+    if (result.statusCode != HttpStatus.ok) return -2;
+
+    return jsonDecode(result.body)['orderId'];
+  }
 
   // ===========================================================================
   //                                Registros
@@ -70,7 +224,25 @@ class DatabaseService {
     return [];
   }
 
-  Future<Map<String, dynamic>?> getSupplierById(int id) async {}
+  Future<Map<String, dynamic>?> getSupplierById(int id) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      //TODO: Não implementado
+    }
+    final api = '${_connectionService.baseUrl}${APIEndpoints.supplier}';
+    final result = await http.get(
+      Uri.parse(api).replace(
+        queryParameters: {'supplierId': id.toString()},
+      ),
+      headers: _tokenHeader('$token'),
+    );
+
+    if (result.statusCode != 200) {
+      return null;
+    }
+
+    return jsonDecode(result.body);
+  }
 
   Future<void> sentRegister(Register register) async {
     try {

@@ -11,10 +11,12 @@ class ScannerField extends StatefulWidget {
   final TextEditingController? controller;
   final void Function(String value) onDelay;
   final void Function()? onSearchClick;
+  final FocusNode? focusNode;
 
   const ScannerField({
     super.key,
     this.controller,
+    this.focusNode,
     this.timerDelayMs = 500,
     this.onlyDigits = true,
     this.searchButton = true,
@@ -94,6 +96,7 @@ class _ScannerFieldState extends State<ScannerField> {
                 enabled: !_showingScanner,
                 controller: _controller,
                 readOnly: _showingScanner,
+                focusNode: widget.focusNode,
                 decoration: const InputDecoration(
                   labelText: 'Código de Barras',
                   border: OutlineInputBorder(),

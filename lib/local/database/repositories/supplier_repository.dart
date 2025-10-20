@@ -15,5 +15,6 @@ class SupplierRepository {
     if (result != null) {
       return SupplierModel.fromMap(result);
     }
+    return null;
   }
 }

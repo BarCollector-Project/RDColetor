@@ -32,6 +32,10 @@ dependencies:
       url: git@github.com:BarCollector-Project/BarCollector-Server.git
       ref: main
       path: SDK
+  pdf: ^3.10.8
+  open_file: ^3.3.2
+  web: ^1.1.1
+  printing: ^5.14.2
 
 
 dev_dependencies:

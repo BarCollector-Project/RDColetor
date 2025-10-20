@@ -166,6 +166,11 @@ class _HomeState extends State<Home> {
                     label: 'Sugestão de compra',
                     onTap: () => Navigator.pushNamed(context, AppRoute.orderSuggestion),
                   ),
+                  _buildGridButton(
+                    icon: Icons.fact_check,
+                    label: 'Validação de NCM/CEST',
+                    onTap: () {/* Navegar para a tela de validação */},
+                  ),
                 ],
               ),
               _buildSectionTitle("Registros"),

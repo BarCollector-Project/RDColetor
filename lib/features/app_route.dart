@@ -7,7 +7,7 @@ import 'package:rdcoletor/features/export/view/export_screen.dart';
 import 'package:rdcoletor/features/home/view/home.dart';
 import 'package:rdcoletor/features/import/view/import_screen.dart';
 import 'package:rdcoletor/features/login/view/login.dart';
-import 'package:rdcoletor/features/order_suggestion/view/order_suggestion.dart';
+import 'package:rdcoletor/features/order_suggestion/view/order_suggestion_screen.dart';
 import 'package:rdcoletor/features/product_details/view/product_details.dart';
 import 'package:rdcoletor/features/products/view/products.dart';
 import 'package:rdcoletor/features/settings/view/camera_settings.dart';
@@ -45,7 +45,7 @@ class AppRoute {
     adminHome: (context) => AdminHome(),
     adminExport: (_) => ExportScreen(),
     pickupHistory: (_) => PickupHistoryScreen(),
-    orderSuggestion: (_) => OrderSuggestion(),
+    orderSuggestion: (_) => OrderSuggestionScreen(),
     productDetails: (_) => ProductDetails(),
   };
 }
