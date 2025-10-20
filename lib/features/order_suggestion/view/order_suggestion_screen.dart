@@ -521,23 +521,27 @@ class _OrderSuggestionState extends State<OrderSuggestionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('${suggestion.product.id} - ${suggestion.product.name}', style: Theme.of(context).textTheme.titleMedium),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text('Cód. Barras: ${suggestion.product.barcode}'),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Fornecedor: ${suggestion.supplierName}'),
+                        Expanded(
+                          child: Text(
+                            '${suggestion.product.id} - ${suggestion.product.name}',
+                            style: Theme.of(context).textTheme.titleMedium,
+                            overflow: TextOverflow.ellipsis, // Adiciona "..." se o texto for muito longo
+                          ),
+                        ),
+                        const SizedBox(width: 16),
                         Text(
                           'Sugestão: ${suggestion.quantitySuggestion.toStringAsFixed(2)}',
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('Cód. Barras: ${suggestion.product.barcode}'),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Fornecedor: ${suggestion.supplierName}',
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -782,6 +786,7 @@ class _OrderSuggestionState extends State<OrderSuggestionScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 90,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () async {
@@ -791,44 +796,42 @@ class _OrderSuggestionState extends State<OrderSuggestionScreen> {
           tooltip: 'Voltar para a lista de pedidos',
         ),
         backgroundColor: (selectedOrder?.status ?? 0) > 0 ? Colors.green.shade50 : Colors.red.shade50,
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _orderSuggestions.newOrder ? 'Nova Sugestão' : 'Pedido Nº: ${selectedOrder?.orderId ?? ''} (Empresa: ${selectedOrder?.companyId ?? ''})',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (!_orderSuggestions.newOrder)
+            Text(
+              _orderSuggestions.newOrder ? 'Nova Sugestão' : 'Pedido Nº: ${selectedOrder?.orderId ?? ''} (Empresa: ${selectedOrder?.companyId ?? ''})',
+              style: Theme.of(context).textTheme.titleLarge,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (!_orderSuggestions.newOrder)
+              Text(
+                'Data: ${selectedOrder?.createdAt.toLocal().toString().substring(0, 16) ?? '--/--/----'}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            if ((selectedOrder?.status ?? 0) > 0) ...[
+              SizedBox(
+                height: 4,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
                   Text(
-                    'Data: ${selectedOrder?.createdAt.toLocal().toString().substring(0, 16) ?? '--/--/----'}',
+                    'Fechada: Nº ',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-              ],
-            ),
-            if ((selectedOrder?.status ?? 0) > 0)
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Fechada: Nº ',
-                      style: Theme.of(context).textTheme.titleLarge,
+                  SizedBox(
+                    width: 40,
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      '${selectedOrder!.status}',
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    SizedBox(
-                      width: 40,
-                      child: Text(
-                        textAlign: TextAlign.center,
-                        '${selectedOrder!.status}',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ],
           ],
         ),
         actions: [
