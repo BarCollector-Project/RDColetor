@@ -1117,35 +1117,34 @@ class _PdfGenerator {
             ),
 
             // Conteúdo
-            ...productsBySupplier.entries.map(
-              (entry) {
-                final supplierInfo = entry.key;
-                final supplierProducts = entry.value;
+            // Usamos expand para criar uma lista "achatada" de widgets
+            ...productsBySupplier.entries.expand((entry) {
+              final supplierInfo = entry.key;
+              final supplierProducts = entry.value;
 
-                return pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(supplierInfo, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                    pw.SizedBox(height: 10),
-                    pw.Table.fromTextArray(
-                      headers: ['ID', 'Produto', 'Cód. Barras', 'Sugestão'],
-                      data: supplierProducts.map((s) {
-                        return [
-                          s.product.id.toString(),
-                          s.product.name,
-                          s.product.barcode,
-                          s.quantitySuggestion.toStringAsFixed(2),
-                        ];
-                      }).toList(),
-                      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      cellAlignment: pw.Alignment.centerLeft,
-                      cellAlignments: {3: pw.Alignment.centerRight},
-                    ),
-                    pw.SizedBox(height: 20),
-                  ],
-                );
-              },
-            ),
+              // Retorna uma lista de widgets para cada fornecedor
+              return [
+                pw.Text(supplierInfo, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 10),
+                pw.Table.fromTextArray(
+                  headers: ['ID', 'Produto', 'Cód. Barras', 'Sugestão'],
+                  data: supplierProducts.map((s) {
+                    return [
+                      s.product.id.toString(),
+                      s.product.name,
+                      s.product.barcode,
+                      s.quantitySuggestion.toStringAsFixed(2),
+                    ];
+                  }).toList(),
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  cellAlignment: pw.Alignment.centerLeft,
+                  cellAlignments: {3: pw.Alignment.centerRight},
+                  // Permite que a tabela quebre entre as páginas
+                  tableWidth: pw.TableWidth.max,
+                ),
+                pw.SizedBox(height: 20),
+              ];
+            }),
           ];
         },
       ),
